@@ -1,0 +1,8 @@
+﻿namespace Ticketing.WebApi.Models
+{
+    public class LoginViewModel
+    {
+        public string Key { get; set; }
+        public bool IsValid { get; set; }
+    }
+}
