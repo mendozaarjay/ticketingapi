@@ -45,9 +45,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CrystalDecisions.CrystalReports.Engine, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
-    <Reference Include="CrystalDecisions.ReportSource, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
-    <Reference Include="CrystalDecisions.Shared, Version=13.0.4000.0, Culture=neutral, PublicKeyToken=692fbea5521e1304, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -167,36 +164,11 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
-    <Compile Include="Crystal\ParkerTicketBackUp.cs">
-      <DependentUpon>ParkerTicketBackUp.rpt</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <SubType>Component</SubType>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Crystal\ParkerTicket.cs">
-      <DependentUpon>ParkerTicket.rpt</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <SubType>Component</SubType>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <Compile Include="Helpers\Calculator.cs" />
     <Compile Include="Helpers\Constants.cs" />
-    <Compile Include="Helpers\CrystalConverter.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\TicketController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
-    <Compile Include="Crystal\OfficialReceipt.cs">
-      <DependentUpon>OfficialReceipt.rpt</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <SubType>Component</SubType>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Crystal\TicketReport.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>TicketReport.rpt</DependentUpon>
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Data\ReportDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -205,10 +177,10 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\CrystalReportPdfResult.cs" />
     <Compile Include="Helpers\Security.cs" />
     <Compile Include="Models\CalculatedRate.cs" />
     <Compile Include="Models\LoginViewModel.cs" />
+    <Compile Include="Models\OfficialReceipt.cs" />
     <Compile Include="Models\ParkerTicket.cs" />
     <Compile Include="Models\ParkerType.cs" />
     <Compile Include="Models\Rates.cs" />
@@ -281,6 +253,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Crystal\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
@@ -310,24 +283,6 @@
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.4.1.min.map" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Crystal\ParkerTicketBackUp.rpt">
-      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
-      <LastGenOutput>ParkerTicketBackUp.cs</LastGenOutput>
-    </EmbeddedResource>
-    <Content Include="Crystal\ParkerTicket.rpt">
-      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
-      <LastGenOutput>ParkerTicket.cs</LastGenOutput>
-    </Content>
-    <Content Include="Crystal\OfficialReceipt.rpt">
-      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
-      <LastGenOutput>OfficialReceipt.cs</LastGenOutput>
-    </Content>
-    <Content Include="Crystal\TicketReport.rpt">
-      <Generator>CrystalDecisions.VSDesigner.CodeGen.ReportCodeGenerator</Generator>
-      <LastGenOutput>TicketReport.cs</LastGenOutput>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{C0C07587-41A7-46C8-8FBD-3F9C8EBE2DDC}" />

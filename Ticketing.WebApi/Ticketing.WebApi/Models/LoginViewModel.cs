@@ -4,5 +4,6 @@
     {
         public string Key { get; set; }
         public bool IsValid { get; set; }
+        public int Id { get; set; }
     }
 }

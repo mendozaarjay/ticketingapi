@@ -121,9 +121,9 @@ namespace Ticketing.WebApi.Controllers
 
         [HttpGet]
         [Route("api/ticket/computetransaction")]
-        public async Task<IHttpActionResult> ComputeTransaction(int transitid,string timeout,string gate,string parkertype,string tenderamount,string change,string totalamount,string userid)
+        public async Task<IHttpActionResult> ComputeTransaction(int transitid,string gate,string parkertype,string tenderamount,string change,string totalamount,string userid)
         {
-            var result = await services.ComputeTransaction(transitid, timeout, gate, parkertype, tenderamount, change, totalamount, userid);
+            var result = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
             if(result.Contains("success"))
             {
                 return Ok(Constants.Success);
@@ -134,6 +134,23 @@ namespace Ticketing.WebApi.Controllers
             }
         }
         [HttpGet]
+        [Route("api/ticket/officialreceipt")]
+        public async Task<IHttpActionResult> GetOfficialReceiptInfo(string ticketno, int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid)
+        {
+            //var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
+            var compute = "process success";
+            if (compute.Contains("success"))
+            {
+                var result = await services.GetOfficialReceipt(ticketno);
+                return Ok(result);
+            }
+            else
+            {
+                return Ok(Constants.Failed);
+            }
+
+        }
+        [HttpGet]
         [Route("api/ticket/isvaliduser")]
         public async Task<IHttpActionResult> IsValidUser(string username, string password)
         {
@@ -142,6 +159,7 @@ namespace Ticketing.WebApi.Controllers
             {
                 Key = Security.EncryptToBase64(result.ToString()),
                 IsValid = result.ToString().Equals("0") ? false : true,
+                Id = result,
             };
             return Ok(item);
         }
