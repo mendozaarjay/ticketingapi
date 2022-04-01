@@ -94,12 +94,12 @@ namespace Ticketing.WebApi.Services
             var userId = int.Parse(result);
             return userId;
         }
-        public async Task<OfficialReceipt> GetOfficialReceipt(string ticketNo)
+        public async Task<OfficialReceipt> GetOfficialReceipt(int id)
         {
             var cmd = new SqlCommand();
             cmd.CommandText = "[dbo].[spGetOfficialReceipInformation]";
             cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@TicketNo", ticketNo);
+            cmd.Parameters.AddWithValue("@Id", id);
             var result = await SCObjects.ExecGetDataAsync(cmd,UserConnection);
             var item = new OfficialReceipt();
             if(result != null)

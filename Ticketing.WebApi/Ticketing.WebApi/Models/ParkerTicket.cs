@@ -13,5 +13,6 @@
         public string TimeIn { get; set; }
         public string Terminal { get; set; }
         public string Location { get; set; }
+        public string Printable { get; set; }
     }
 }

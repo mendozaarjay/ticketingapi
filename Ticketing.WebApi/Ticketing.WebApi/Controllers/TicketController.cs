@@ -42,7 +42,18 @@ namespace Ticketing.WebApi.Controllers
                Terminal = dt.Rows[0]["Terminal"].ToString(),
                Location = dt.Rows[0]["Location"].ToString(),
             };
-
+            var ticketInfo = string.Empty;
+            ticketInfo += $"{ticket.Company}\n";
+            ticketInfo += $"{ticket.Address1}\n";
+            ticketInfo += $"{ticket.Address2}\n";
+            ticketInfo += $"{ticket.Address3}\n";
+            ticketInfo += $"TIN : {ticket.TIN}\n";
+            ticketInfo += $"PLATENO  :      {ticket.PlateNo}\n";
+            ticketInfo += $"TICKETNO :      {ticket.TicketNo}\n";
+            ticketInfo += $"LOCATION :      {ticket.Location}\n";
+            ticketInfo += $"TIME IN  :      {ticket.TimeIn}\n";
+            ticketInfo += $"TERMINAL :      {ticket.Terminal}\n";
+            ticket.Printable = ticketInfo; 
             return Ok(ticket);
         }
         [HttpGet]
@@ -137,11 +148,78 @@ namespace Ticketing.WebApi.Controllers
         [Route("api/ticket/officialreceipt")]
         public async Task<IHttpActionResult> GetOfficialReceiptInfo(string ticketno, int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid)
         {
-            //var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
-            var compute = "process success";
+            var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
             if (compute.Contains("success"))
             {
-                var result = await services.GetOfficialReceipt(ticketno);
+                var result = await services.GetOfficialReceipt(transitid);
+                var orinfo = string.Empty;
+                orinfo += $"{result.Company}\n";
+                orinfo += $"{result.Address1}\n";
+                orinfo += $"{result.Address2}\n";
+                orinfo += $"{result.Address3}\n";
+                orinfo += $"VAT REG TIN :\n";
+                orinfo += $"{result.TIN} :\n";
+                orinfo += $"ACCREDITATION NO :\n";
+                orinfo += $"{result.AccreditationNo} :\n";
+                orinfo += $"VALID UNTIL :{result.AccreditationValidUntil} \n";
+                orinfo += $"DATE ISSUED :{result.AccreditationDate} \n";
+                orinfo += $"PTU NO :\n";
+                orinfo += $"{result.PTUNo} \n";
+                orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
+                orinfo += $"OFFICIAL RECEIPT\n\n";
+                orinfo += $"RETAIL\n\n";
+                orinfo += $"OR NO : {result.OrNumber}\n";
+                orinfo += $"TICKET NO : {result.TicketNo}\n";
+                orinfo += $"PLATE NO : {result.PlateNo}\n\n";
+                orinfo += $"LOCATION:        :{result.Location}\n";
+                orinfo += $"TERMNIAL         :{result.Terminal}\n";
+                orinfo += $"CASHIER NAME     :{result.CashierName}\n";
+                orinfo += $"DATE/TIME IN     :{result.TimeIn}\n";
+                orinfo += $"DATE/TIME OUT    :{result.TimeOut}\n";
+                orinfo += $"DURATION OF STAY :{result.Duration}\n";
+                orinfo += $"----------------------------\n";
+                orinfo += $"TOTAL W/ VAT     :P {result.TotalWithVaT}\n";
+                orinfo += $"VAT              :P {result.Vat}\n";
+                orinfo += $"SUBTOTAL         :P {result.Subtotal}\n";
+                orinfo += $"DISCOUNT         :P {result.Discount}\n";
+                orinfo += $"----------------------------\n";
+                orinfo += $"TENDER TYPE      :P {result.TenderType}\n";
+                orinfo += $"TOTAL AMT DUE    :P {result.TotalAmountDue}\n";
+                orinfo += $"AMT TENDERED     :P {result.AmountTendered}\n";
+                orinfo += $"CHANGE           :P {result.Change}\n";
+                orinfo += $"----------------------------\n";
+                orinfo += $"VATable Sales    :P {result.VatableSales}\n";
+                orinfo += $"VAT Amount       :P {result.VatAmount}\n";
+                orinfo += $"VAT Exempt Sales :P {result.VatExempt}\n";
+                orinfo += $"Zero Rated Sales :P {result.ZeroRated}\n";
+                orinfo += $"----------------------------\n";
+                orinfo += $"PARKER INFORMATION\n";
+                orinfo += $"NAME : _____________________\n";
+                orinfo += $"ADDRESS : __________________\n";
+                orinfo += $"TIN: _______________________\n";
+                orinfo += $"SC/PWD ID: _________________\n";
+                orinfo += $"SIGNATURE: _________________\n\n";
+                orinfo += $"----------------------------\n";
+                orinfo += $"SMARTBAS (PHILS.) CORP.\n";
+                orinfo += $"Unit 3106, East Tower, Phil.\n";
+                orinfo += $"Stock Exchange Center\n";
+                orinfo += $"Exchange Road,Ortigas Center,\n";
+                orinfo += $"Pasig City 1605\n";
+                orinfo += $"VAT REG TIN :\n";
+                orinfo += $"010-364-544-000\n";
+                orinfo += $"ACCREDITATION NO :\n";
+                orinfo += $"{result.AccreditationNo} \n";
+                orinfo += $"VALID UNTIL :{result.AccreditationValidUntil} \n";
+                orinfo += $"DATE ISSUED :{result.AccreditationDate} \n";
+                orinfo += $"PTU NO :\n";
+                orinfo += $"{result.PTUNo} \n";
+                orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
+                orinfo += $"THANK YOU!\n";
+                orinfo += $"THIS RECEIPT SHALL BE VALID\n";
+                orinfo += $"FOR FIVE(5) YEARS FROM THE\n";
+                orinfo += $"DATE OF THE PERMIT TO USE\n\n";
+
+                result.Printable = orinfo;
                 return Ok(result);
             }
             else

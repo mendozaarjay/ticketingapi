@@ -34,6 +34,7 @@
         public string VatAmount { get; set; }
         public string VatExempt { get; set; }
         public string ZeroRated { get; set; }
+        public string Printable { get; set; }
 
     }
 }
