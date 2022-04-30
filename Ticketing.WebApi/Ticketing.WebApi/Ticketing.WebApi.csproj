@@ -179,11 +179,18 @@
     </Compile>
     <Compile Include="Helpers\Security.cs" />
     <Compile Include="Models\CalculatedRate.cs" />
+    <Compile Include="Models\ReadingResponse.cs" />
     <Compile Include="Models\LoginViewModel.cs" />
     <Compile Include="Models\OfficialReceipt.cs" />
     <Compile Include="Models\ParkerTicket.cs" />
     <Compile Include="Models\ParkerType.cs" />
     <Compile Include="Models\Rates.cs" />
+    <Compile Include="Models\Header.cs" />
+    <Compile Include="Models\CashlessType.cs" />
+    <Compile Include="Models\CashierSummary.cs" />
+    <Compile Include="Models\YReading.cs" />
+    <Compile Include="Models\ZReading.cs" />
+    <Compile Include="Models\XReading.cs" />
     <Compile Include="Models\VerifiedTicket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers\SCObjects.cs" />

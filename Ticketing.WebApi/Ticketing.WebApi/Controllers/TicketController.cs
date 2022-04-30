@@ -230,9 +230,9 @@ namespace Ticketing.WebApi.Controllers
         }
         [HttpGet]
         [Route("api/ticket/isvaliduser")]
-        public async Task<IHttpActionResult> IsValidUser(string username, string password)
+        public async Task<IHttpActionResult> IsValidUser(string username, string password,string gateid)
         {
-            var result = await services.IsValidUser(username, password);
+            var result = await services.IsValidUser(username, password,gateid);
             var item = new LoginViewModel
             {
                 Key = Security.EncryptToBase64(result.ToString()),
@@ -241,6 +241,21 @@ namespace Ticketing.WebApi.Controllers
             };
             return Ok(item);
         }
+        [HttpGet]
+        [Route("api/ticket/signout")]
+        public async Task<IHttpActionResult> Signout(int userid, int gateid)
+        {
+            var result = await services.SignOut(userid, gateid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/xreading")]
+        public async Task<IHttpActionResult> XReading(int gateid)
+        {
+            var result = await services.PerformXReading(gateid);
+            return Ok(result);
+        }
+
 
         private byte[] ConvertImage(System.Drawing.Image image)
         {
@@ -249,6 +264,290 @@ namespace Ticketing.WebApi.Controllers
                 image.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
                 return ms.ToArray();
             }
+        }
+        [HttpGet]
+        [Route("api/ticket/performxreading")]
+        public async Task<IHttpActionResult> PerformXReading(int gateid)
+        {
+            var result = await services.PerformXReading(gateid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/xreading")]
+        public async Task<IHttpActionResult> GetXReadingDetails(int gateid, string srno)
+        {
+            var header = await services.GetReportHeaderAsync(gateid);
+            var item = new ReadingResponse();
+
+            var headerString = string.Empty;
+            headerString += $"{header.Company}\n";
+            headerString += $"{header.Address1}\n";
+            headerString += $"{header.Address2}\n";
+            headerString += $"{header.Address3}\n";
+            headerString += $"VAT REG TIN :\n";
+            headerString += $"{header.TIN} :\n";
+            headerString += $"ACCREDITATION NO :\n";
+            headerString += $"{header.AccreditationNo} :\n";
+            headerString += $"VALID UNTIL :{header.AccreditationValidUntil} \n";
+            headerString += $"DATE ISSUED :{header.AccreditationDate} \n";
+            headerString += $"PTU NO :\n";
+            headerString += $"{header.PTUNo} \n";
+            headerString += $"DATE ISSUED :{header.PTUDateIssued} \n\n";
+            item.Header = headerString;
+            var body = await services.GetXReadingAsync(srno);
+            var bodyString = string.Empty;
+            bodyString += $"CASHIER NAME :{body.FirstOrDefault().CashierName}\n";
+            bodyString += $"LOCATION     :{body.FirstOrDefault().Location}\n";
+            bodyString += $"TERMINAL     :{body.FirstOrDefault().Terminal}\n";
+            bodyString += $"SR NO        :{srno}\n";
+            bodyString += $"TIME IN      :{body.FirstOrDefault().TimeIn}\n";
+            bodyString += $"TIME OUT     :{body.FirstOrDefault().TimeOut}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE       IN    OUT   REMAINING\n";
+            bodyString += $"PARKER     {body.FirstOrDefault().ParkerIn}    {body.FirstOrDefault().ParkerOut}\n";     
+            bodyString += $"RESERVED   {body.FirstOrDefault().ParkerIn}    {body.FirstOrDefault().ParkerOut}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"SALES COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"RATE TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            foreach(var bodyItem in body)
+            {
+                bodyString += $"{bodyItem.RateType}        {bodyItem.Count}     {bodyItem.Amount}\n";
+            }
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"PENALTY COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"LOST CARD   {body.FirstOrDefault().LostCardCount}     {body.FirstOrDefault().LostCardAmount}\n";
+            bodyString += $"OVER NIGHT  {body.FirstOrDefault().OvernightCount}     {body.FirstOrDefault().OvernightAmount}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"CASHLESS COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            var cashless = await services.GetCashlessForXReading(srno);
+            foreach(var bodyItem in cashless)
+            {
+                bodyString += $"{bodyItem.RateType}        {bodyItem.Count}     {bodyItem.Amount}\n";
+            }
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TOTAL TRANSACTION :{body.FirstOrDefault().TotalTransaction}\n";
+            bodyString += $"TOTAL PARTIAL     :{body.FirstOrDefault().TotalPartial}\n";
+            bodyString += $"TOTAL TENDERED    :{body.FirstOrDefault().TotalTendered}\n";
+            bodyString += $"VARIANCE          :{body.FirstOrDefault().TotalVariance}\n";
+            item.Body = bodyString;
+            return Ok(item);
+        }
+        [HttpGet]
+        [Route("api/ticket/performyreading")]
+        public async Task<IHttpActionResult> PerformyYReading(int gateid, int userid)
+        {
+            var result = await services.PerformYReading(gateid,userid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/yreading")]
+        public async Task<IHttpActionResult> GetYReadingDetails(int gateid, string srno)
+        {
+            var header = await services.GetReportHeaderAsync(gateid);
+            var item = new ReadingResponse();
+
+            var headerString = string.Empty;
+            headerString += $"{header.Company}\n";
+            headerString += $"{header.Address1}\n";
+            headerString += $"{header.Address2}\n";
+            headerString += $"{header.Address3}\n";
+            headerString += $"VAT REG TIN :\n";
+            headerString += $"{header.TIN} :\n";
+            headerString += $"ACCREDITATION NO :\n";
+            headerString += $"{header.AccreditationNo} :\n";
+            headerString += $"VALID UNTIL :{header.AccreditationValidUntil} \n";
+            headerString += $"DATE ISSUED :{header.AccreditationDate} \n";
+            headerString += $"PTU NO :\n";
+            headerString += $"{header.PTUNo} \n";
+            headerString += $"DATE ISSUED :{header.PTUDateIssued} \n\n";
+            item.Header = headerString;
+            var body = await services.GetYReadingAsync(srno);
+            var bodyString = string.Empty;
+            bodyString += $"LOCATION     :{body.FirstOrDefault().Location}\n";
+            bodyString += $"TERMINAL     :{body.FirstOrDefault().Terminal}\n";
+            bodyString += $"SR NO        :{srno}\n";
+            bodyString += $"TIME IN      :{body.FirstOrDefault().TimeIn}\n";
+            bodyString += $"TIME OUT     :{body.FirstOrDefault().TimeOut}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE       IN    OUT   REMAINING\n";
+            bodyString += $"PARKER     {body.FirstOrDefault().ParkerIn}    {body.FirstOrDefault().ParkerOut}\n";
+            bodyString += $"RESERVED   {body.FirstOrDefault().ParkerIn}    {body.FirstOrDefault().ParkerOut}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"SALES COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"RATE TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            foreach (var bodyItem in body)
+            {
+                bodyString += $"{bodyItem.RateType}        {bodyItem.Count}     {bodyItem.Amount}\n";
+            }
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"PENALTY COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"LOST CARD   {body.FirstOrDefault().LostCardCount}     {body.FirstOrDefault().LostCardAmount}\n";
+            bodyString += $"OVER NIGHT  {body.FirstOrDefault().OvernightCount}     {body.FirstOrDefault().OvernightAmount}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"CASHLESS COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            var cashless = await services.GetCashlessForXReading(srno);
+            foreach (var bodyItem in cashless)
+            {
+                bodyString += $"{bodyItem.RateType}        {bodyItem.Count}     {bodyItem.Amount}\n";
+            }
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"CASHIER COLLECTION SUMMARY\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"CASHIERS SALES\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"NAME            START  NO  AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+
+            var summary = await services.GetCashierSummaryForYReading(srno);
+
+            foreach(var i in summary)
+            {
+                bodyString += $"{i.Cashier}    {i.TimeIn}  {i.Count} {i.Amount}\n";
+            }
+
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TOTAL TRANSACTION :{body.FirstOrDefault().TotalTransaction}\n";
+            bodyString += $"TOTAL PARTIAL     :{body.FirstOrDefault().TotalPartial}\n";
+            bodyString += $"TOTAL TENDERED    :{body.FirstOrDefault().TotalTendered}\n";
+            bodyString += $"VARIANCE          :{body.FirstOrDefault().TotalVariance}\n";
+            item.Body = bodyString;
+            return Ok(item);
+        }
+        [HttpGet]
+        [Route("api/ticket/xreadingtoday")]
+        public async Task<IHttpActionResult> TodayXReading(int gateid)
+        {
+            var result = await services.GetTodayXReading(gateid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/yreadingtoday")]
+        public async Task<IHttpActionResult> TodayYReading(int gateid)
+        {
+            var result = await services.GetTodayYReading(gateid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/zreadingtoday")]
+        public async Task<IHttpActionResult> TodayZReading(int gateid)
+        {
+            var result = await services.GetTodayZReading(gateid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/performzreading")]
+        public async Task<IHttpActionResult> PerformZReading(int gateid, int userid)
+        {
+            var result = await services.PerformZReading(gateid, userid);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("api/ticket/zreading")]
+        public async Task<IHttpActionResult> GetZReadingDetails(int gateid, string srno, int userid)
+        {
+            var header = await services.GetReportHeaderAsync(gateid);
+            var item = new ReadingResponse();
+
+            var headerString = string.Empty;
+            headerString += $"{header.Company}\n";
+            headerString += $"{header.Address1}\n";
+            headerString += $"{header.Address2}\n";
+            headerString += $"{header.Address3}\n";
+            headerString += $"VAT REG TIN :\n";
+            headerString += $"{header.TIN} :\n";
+            headerString += $"ACCREDITATION NO :\n";
+            headerString += $"{header.AccreditationNo} :\n";
+            headerString += $"VALID UNTIL :{header.AccreditationValidUntil} \n";
+            headerString += $"DATE ISSUED :{header.AccreditationDate} \n";
+            headerString += $"PTU NO :\n";
+            headerString += $"{header.PTUNo} \n";
+            headerString += $"DATE ISSUED :{header.PTUDateIssued} \n\n";
+            item.Header = headerString;
+            var body = await services.GetZReadingAsync(srno,userid);
+            var bodyString = string.Empty;
+            bodyString += $"LOCATION     :{body.FirstOrDefault().Location}\n";
+            bodyString += $"TERMINAL     :{body.FirstOrDefault().Terminal}\n";
+            bodyString += $"SR NO        :{srno}\n";
+            bodyString += $"TIME IN      :{body.FirstOrDefault().TimeIn}\n";
+            bodyString += $"TIME OUT     :{body.FirstOrDefault().TimeOut}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TICKET COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"NEW R-TICKET NO : {body.FirstOrDefault().NewRT}\n";
+            bodyString += $"OLD R-TICKET NO : {body.FirstOrDefault().OldRT}\n";
+            bodyString += $"NEW F-TICKET NO : {body.FirstOrDefault().NewFT}\n";
+            bodyString += $"OLD F-TICKET NO : {body.FirstOrDefault().OldFT}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"RECEIPT COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"NEW FR NO : {body.FirstOrDefault().NewFR}\n";
+            bodyString += $"OLD FR NO : {body.FirstOrDefault().OldFR}\n";
+            bodyString += $"NEW OR NO : {body.FirstOrDefault().NewOR}\n";
+            bodyString += $"OLD OR NO : {body.FirstOrDefault().OldOR}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"SALES\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"OLD GRAND SALES : {body.FirstOrDefault().OldGrandSales}\n";
+            bodyString += $"TODAY SALES     : {body.FirstOrDefault().TodaySales}\n";
+            bodyString += $"NEW GRAND SALES : {body.FirstOrDefault().NewGrandSales}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"SALES COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"RATE TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            foreach (var bodyItem in body)
+            {
+                bodyString += $"{bodyItem.RateType}        {bodyItem.Count}     {bodyItem.Amount}\n";
+            }
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"PENALTY COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"LOST CARD   {body.FirstOrDefault().LostCardCount}     {body.FirstOrDefault().LostCardAmount}\n";
+            bodyString += $"OVER NIGHT  {body.FirstOrDefault().OvernightCount}     {body.FirstOrDefault().OvernightAmount}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"CASHLESS COUNTER\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TYPE        COUNT     AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            var cashless = await services.GetCashlessForZReading(srno);
+            foreach (var bodyItem in cashless)
+            {
+                bodyString += $"{bodyItem.RateType}        {bodyItem.Count}     {bodyItem.Amount}\n";
+            }
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"VAT BREAKDOWN\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"VATABLE SALES : {body.FirstOrDefault().VatableSales}\n";
+            bodyString += $"VAT AMOUNT    : {body.FirstOrDefault().VatAmount}\n";
+            bodyString += $"VAT EXEPMT    : 0.00\n";
+            bodyString += $"ZERO RATE     : 0.00\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"Z-COUNT               {body.FirstOrDefault().ZCount}\n";
+            bodyString += $"RESET COUNTER         0\n";
+            bodyString += $"TOTAL ACCUMULATED SALES  {body.FirstOrDefault().Total}\n";
+            bodyString += $"PREPARED BY :   {body.FirstOrDefault().PreparedBy}\n";
+            bodyString += $"---------------------------------------\n";
+            item.Body = bodyString;
+            return Ok(item);
         }
     }
 }

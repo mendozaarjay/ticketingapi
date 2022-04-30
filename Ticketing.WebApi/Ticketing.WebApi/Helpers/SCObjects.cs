@@ -220,5 +220,73 @@ namespace Ticketing.WebApi
             }
             return result;
         }
+        /// <summary>
+        /// This will return a string confirmation if the stored procedure was successfully executed.
+        /// </summary>
+        /// <param name="cmd">Sql Command</param>
+        /// <param name="SqlConnectionString">Sql Connection String</param>
+        /// <returns></returns>
+        public static string ExecuteNonQueryWithReturn(SqlCommand cmd, string SqlConnectionString)
+        {
+            string _returnThis = string.Empty;
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = SqlConnectionString;
+            cn.Open();
+            SqlTransaction sqlTransaction = cn.BeginTransaction();
+            try
+            {
+                cmd.Connection = cn;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Transaction = sqlTransaction;
+                sqlTransaction.Commit();
+                _returnThis = cmd.ExecuteScalar().ToString();
+
+            }
+            catch (Exception ex)
+            {
+                _returnThis = "Errors.\n" + ex.Message;
+                sqlTransaction.Rollback();
+            }
+            finally
+            {
+                if (cn.State == ConnectionState.Open)
+                    cn.Close();
+            }
+            return _returnThis;
+        }
+        /// <summary>
+        /// This will return a string confirmation if the stored procedure was successfully executed asynchronously.
+        /// </summary>
+        /// <param name="cmd">Sql Command</param>
+        /// <param name="SqlConnectionString">Sql Connection String</param>
+        /// <returns></returns>
+        public static async Task<string> ExecuteNonQueryWithReturnAsync(SqlCommand cmd, string SqlConnectionString)
+        {
+            string _returnThis = string.Empty;
+            SqlConnection cn = new SqlConnection();
+            cn.ConnectionString = SqlConnectionString;
+            await cn.OpenAsync();
+            SqlTransaction sqlTransaction = cn.BeginTransaction();
+            try
+            {
+                cmd.Connection = cn;
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Transaction = sqlTransaction;
+                var a = await cmd.ExecuteScalarAsync();
+                sqlTransaction.Commit();
+                _returnThis = a.ToString();
+            }
+            catch (Exception ex)
+            {
+                _returnThis = "Errors.\n" + ex.Message;
+                sqlTransaction.Rollback();
+            }
+            finally
+            {
+                if (cn.State == ConnectionState.Open)
+                    cn.Close();
+            }
+            return _returnThis;
+        }
     }
 }
