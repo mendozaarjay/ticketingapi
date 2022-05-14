@@ -24,9 +24,9 @@ namespace Ticketing.WebApi.Controllers
         }
         [HttpGet]
         [Route("api/ticket/printticket")]
-        public async Task<IHttpActionResult> PrintTicket(string ticketNo, string plateNo = "")
+        public async Task<IHttpActionResult> PrintTicket(string ticketNo, string gateid, string plateNo = "")
         {
-            var sql = $"EXEC [dbo].[spGenerateTicketNumber] @TicketNo = '{ticketNo}', @PlateNo = '{plateNo}'";
+            var sql = $"EXEC [dbo].[spGenerateTicketNumber] @TicketNo = '{ticketNo}', @PlateNo = '{plateNo}',@GateId='{gateid}'";
             var dt = await SCObjects.LoadDataTableAsync(sql, UserConnectionString);
             var ticket = new ParkerTicket
             {
