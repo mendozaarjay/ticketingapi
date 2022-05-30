@@ -281,7 +281,7 @@ namespace Ticketing.WebApi.Services
         public async Task<List<YReading>> GetYReadingAsync(string srno)
         {
             var cmd = new SqlCommand();
-            cmd.CommandText = "[dbo].[spGetXReading]";
+            cmd.CommandText = "[dbo].[spGetYReading]";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@SrNo", srno);
             var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
