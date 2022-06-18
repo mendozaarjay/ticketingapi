@@ -305,7 +305,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"---------------------------------------\n";
             bodyString += $"TYPE       IN    OUT   REMAINING\n";
             bodyString += $"PARKER     {body.FirstOrDefault().ParkerIn}    {body.FirstOrDefault().ParkerOut}\n";     
-            bodyString += $"RESERVED   {body.FirstOrDefault().ParkerIn}    {body.FirstOrDefault().ParkerOut}\n";
+            bodyString += $"RESERVED   {body.FirstOrDefault().ReservedIn}    {body.FirstOrDefault().ReservedIn}\n";
             bodyString += $"---------------------------------------\n";
             bodyString += $"SALES COUNTER\n";
             bodyString += $"---------------------------------------\n";
