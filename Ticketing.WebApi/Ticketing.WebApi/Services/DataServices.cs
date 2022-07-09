@@ -70,7 +70,7 @@ namespace Ticketing.WebApi.Services
             }
             return items;
         }
-        public async Task<string> ComputeTransaction(int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid)
+        public async Task<string> ComputeTransaction(int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid, int discountid = 0, string discountamount = "", int cashlesstype = 0, string cashlessreference = "")
         {
             var sql = "[dbo].[spComputeTransaction]";
             var cmd = new SqlCommand();
@@ -81,9 +81,13 @@ namespace Ticketing.WebApi.Services
             cmd.Parameters.AddWithValue("@PaymentGate", gate);
             cmd.Parameters.AddWithValue("@ParkerTypeId", parkertype);
             cmd.Parameters.AddWithValue("@TenderedAmount", tenderamount);
-            cmd.Parameters.AddWithValue("@TotalAmount", change);
-            cmd.Parameters.AddWithValue("@Change", totalamount);
+            cmd.Parameters.AddWithValue("@TotalAmount", totalamount);
+            cmd.Parameters.AddWithValue("@Change", change);
             cmd.Parameters.AddWithValue("@UserId", userid);
+            cmd.Parameters.AddWithValue("@DiscountType", discountid);
+            cmd.Parameters.AddWithValue("@DiscountAmount", discountamount);
+            cmd.Parameters.AddWithValue("@TransactionType", cashlesstype);
+            cmd.Parameters.AddWithValue("@Reference", cashlessreference);
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }
@@ -130,7 +134,7 @@ namespace Ticketing.WebApi.Services
         public async Task<OfficialReceipt> GetOfficialReceipt(int id)
         {
             var cmd = new SqlCommand();
-            cmd.CommandText = "[dbo].[spGetOfficialReceipInformation]";
+            cmd.CommandText = "[dbo].[spGetOfficialReceiptInformation]";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@Id", id);
             var result = await SCObjects.ExecGetDataAsync(cmd,UserConnection);
@@ -471,6 +475,178 @@ namespace Ticketing.WebApi.Services
                 }
             }
             return items;
+        }
+
+        public async Task<ChangeFund> CheckChangeFund(int userId, int gateId)
+        {
+            var sql = $"SELECT * FROM [dbo].[fnCheckChangeFundForMobilePos]({userId},{gateId}) [fc]";
+            var item = new ChangeFund();
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+            if(result != null)
+            {
+                if(result.Rows.Count > 0)
+                {
+                    item.Id = int.Parse(result.Rows[0]["CashierShiftID"].ToString());
+                    item.WithChangeFund = result.Rows[0]["WithChangeFund"].ToString().Equals("1");
+                }
+            }
+            return item;
+        }
+        public async Task<string> SetChangeFund(int id, decimal changeFund)
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[spSetChangeFund]";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id", id);
+            cmd.Parameters.AddWithValue("@ChangeFund", changeFund);
+            var result = await SCObjects.ExecNonQueryAsync(cmd, this.UserConnection);
+            return result;
+        }
+        public async Task<TenderDeclaration> CheckTenderDeclaration(int userId, int gateId)
+        {
+            var sql = $"SELECT * FROM [dbo].[fnCheckTenderDeclarationMobilePos]({userId},{gateId}) [fc]";
+            var item = new TenderDeclaration();
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+            if (result != null)
+            {
+                if (result.Rows.Count > 0)
+                {
+                    item.Id = int.Parse(result.Rows[0]["CashierShiftID"].ToString());
+                    item.Total = int.Parse(result.Rows[0]["Total"].ToString());
+                    item.WithTender = int.Parse(result.Rows[0]["Total"].ToString()) > 0;
+                }
+            }
+            return item;
+        }
+        public async Task<string> SetTenderDeclaration(TenderDeclarationValue item)
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[spSetTenderDeclaration]";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id", item.Id);
+            cmd.Parameters.AddWithValue("@ValueFor1000", item.ValueFor1000);
+            cmd.Parameters.AddWithValue("@ValueFor500", item.ValueFor500);
+            cmd.Parameters.AddWithValue("@ValueFor200", item.ValueFor200);
+            cmd.Parameters.AddWithValue("@ValueFor100", item.ValueFor100);
+            cmd.Parameters.AddWithValue("@ValueFor50", item.ValueFor50);
+            cmd.Parameters.AddWithValue("@ValueFor20", item.ValueFor20);
+            cmd.Parameters.AddWithValue("@ValueFor10", item.ValueFor10);
+            cmd.Parameters.AddWithValue("@ValueFor5", item.ValueFor5);
+            cmd.Parameters.AddWithValue("@ValueFor1", item.ValueFor1);
+            cmd.Parameters.AddWithValue("@ValueForCent", item.ValueForCent);
+            cmd.Parameters.AddWithValue("@Comment", item.Comment);
+            var result = await SCObjects.ExecNonQueryAsync(cmd, this.UserConnection);
+            return result;
+        }
+        public async Task<TenderDeclarationDetails> GetTenderDeclaration(int id)
+        {
+            var sql = $"EXEC [dbo].[spGenerateTenderDeclaration] @Id = {id}";
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+            var item = new TenderDeclarationDetails();
+
+            if(result != null)
+            {
+                if(result.Rows.Count > 0)
+                {
+                    item.ShiftIn = result.Rows[0]["ShiftIn"].ToString();
+                    item.ShiftOut = result.Rows[0]["ShiftOut"].ToString();
+                    item.PrintDate = result.Rows[0]["PrintDate"].ToString();
+                    item.Location = result.Rows[0]["Location"].ToString();
+                    item.SrNoString = result.Rows[0]["SrNoString"].ToString();
+                    item.Cashier = result.Rows[0]["Cashier"].ToString();
+                    item.Gate = result.Rows[0]["Gate"].ToString();
+                    item.TotalDue = result.Rows[0]["TotalDue"].ToString();
+                    item.TotalConfirmed = result.Rows[0]["TotalConfirmed"].ToString();
+                    item.ChangeFund = result.Rows[0]["ChangeFund"].ToString();
+                    item.Partial = result.Rows[0]["Partial"].ToString();
+                    item.PHP1000 = result.Rows[0]["PHP1000"].ToString();
+                    item.PHP500 = result.Rows[0]["PHP500"].ToString();
+                    item.PHP200 = result.Rows[0]["PHP200"].ToString();
+                    item.PHP100 = result.Rows[0]["PHP100"].ToString();
+                    item.PHP50 = result.Rows[0]["PHP50"].ToString();
+                    item.PHP20 = result.Rows[0]["PHP20"].ToString();
+                    item.PHP10 = result.Rows[0]["PHP10"].ToString();
+                    item.PHP5 = result.Rows[0]["PHP5"].ToString();
+                    item.PHP1 = result.Rows[0]["PHP1"].ToString();
+                    item.CENT1 = result.Rows[0]["CENT1"].ToString();
+                }
+            }
+
+            return item;
+        }
+
+        public async Task<List<OfficialReceiptItem>> OfficialReceiptSearch(int gateid, string keyword = "")
+        {
+            var sql = $"EXEC [dbo].[spOfficialReceiptList] @GateId = {gateid}, @Keyword = '{keyword}'";
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+            var items = new List<OfficialReceiptItem>();
+            if(result != null)
+            {
+                foreach(DataRow dr in result.Rows)
+                {
+                    var item = new OfficialReceiptItem
+                    {
+                        Id = int.Parse(dr["Id"].ToString()),
+                        Gate = dr["Gate"].ToString(),
+                        ORNumber = dr["ORNumber"].ToString(),
+                        PaymentDate = dr["PaymentDate"].ToString(),
+                        PlateNo = dr["PlateNo"].ToString(),
+                    };
+                    items.Add(item);
+                }
+            }
+
+
+            return items;
+        }
+        public async Task<List<DiscountType>> GetDiscountTypes()
+        {
+            var sql = "SELECT [ID],[Name],[Type],[Amount] FROM [dbo].[DiscountTypes] WHERE [Disable] = 0";
+            var items = new List<DiscountType>();
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+            if(result != null)
+            {
+                foreach(DataRow dr in result.Rows)
+                {
+                    var item = new DiscountType
+                    {
+                        Id = int.Parse(dr["Id"].ToString()),
+                        Type = int.Parse(dr["Type"].ToString()),
+                        Amount = int.Parse(dr["Amount"].ToString()),
+                        Name = dr["Name"].ToString()
+                    };
+                    items.Add(item);
+                }
+            }
+            return items;
+        }
+        public async Task<List<TransactionType>> TransactionTypes()
+        {
+            var sql = "SELECT * FROM [dbo].[fnGetTransactionTypes]() [fgtt]";
+            var items = new List<TransactionType>();
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+            if (result != null)
+            {
+                foreach (DataRow dr in result.Rows)
+                {
+                    var item = new TransactionType
+                    {
+                        Id = int.Parse(dr["Id"].ToString()),
+                        Name = dr["Name"].ToString()
+                    };
+                    items.Add(item);
+                }
+            }
+            return items;
+        }
+        public async Task<string> ResetCounter(int gateId)
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[spResetCounter]";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@GateId", gateId);
+            var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
+            return result;
         }
     }
 }

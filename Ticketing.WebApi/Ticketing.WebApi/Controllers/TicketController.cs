@@ -132,7 +132,7 @@ namespace Ticketing.WebApi.Controllers
 
         [HttpGet]
         [Route("api/ticket/computetransaction")]
-        public async Task<IHttpActionResult> ComputeTransaction(int transitid,string gate,string parkertype,string tenderamount,string change,string totalamount,string userid)
+        public async Task<IHttpActionResult> ComputeTransaction(int transitid,string gate,string parkertype,string tenderamount,string change,string totalamount,string userid, int discountid = 0, string discountamount ="", int cashlesstype = 0, string cashlessreference = "")
         {
             var result = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
             if(result.Contains("success"))
@@ -146,9 +146,9 @@ namespace Ticketing.WebApi.Controllers
         }
         [HttpGet]
         [Route("api/ticket/officialreceipt")]
-        public async Task<IHttpActionResult> GetOfficialReceiptInfo(string ticketno, int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid)
+        public async Task<IHttpActionResult> GetOfficialReceiptInfo(string ticketno, int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid, int discountid = 0, string discountamount = "", int cashlesstype = 0, string cashlessreference = "")
         {
-            var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
+            var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid,discountid,discountamount,cashlesstype,cashlessreference);
             if (compute.Contains("success"))
             {
                 var result = await services.GetOfficialReceipt(transitid);
@@ -228,6 +228,90 @@ namespace Ticketing.WebApi.Controllers
             }
 
         }
+        [HttpGet]
+        [Route("api/ticket/reprintofficialreceipt")]
+        public async Task<IHttpActionResult> ReprintOfficialReceipt(int transitid)
+        {
+            var result = await services.GetOfficialReceipt(transitid);
+            var orinfo = string.Empty;
+            orinfo += $"{result.Company}\n";
+            orinfo += $"{result.Address1}\n";
+            orinfo += $"{result.Address2}\n";
+            orinfo += $"{result.Address3}\n";
+            orinfo += $"VAT REG TIN :\n";
+            orinfo += $"{result.TIN} :\n";
+            orinfo += $"ACCREDITATION NO :\n";
+            orinfo += $"{result.AccreditationNo} :\n";
+            orinfo += $"VALID UNTIL :{result.AccreditationValidUntil} \n";
+            orinfo += $"DATE ISSUED :{result.AccreditationDate} \n";
+            orinfo += $"PTU NO :\n";
+            orinfo += $"{result.PTUNo} \n";
+            orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
+            orinfo += $"OFFICIAL RECEIPT (REPRINT)\n\n";
+            orinfo += $"RETAIL\n\n";
+            orinfo += $"OR NO : {result.OrNumber}\n";
+            orinfo += $"TICKET NO : {result.TicketNo}\n";
+            orinfo += $"PLATE NO : {result.PlateNo}\n\n";
+            orinfo += $"LOCATION:        :{result.Location}\n";
+            orinfo += $"TERMNIAL         :{result.Terminal}\n";
+            orinfo += $"CASHIER NAME     :{result.CashierName}\n";
+            orinfo += $"DATE/TIME IN     :{result.TimeIn}\n";
+            orinfo += $"DATE/TIME OUT    :{result.TimeOut}\n";
+            orinfo += $"DURATION OF STAY :{result.Duration}\n";
+            orinfo += $"----------------------------\n";
+            orinfo += $"TOTAL W/ VAT     :P {result.TotalWithVaT}\n";
+            orinfo += $"VAT              :P {result.Vat}\n";
+            orinfo += $"SUBTOTAL         :P {result.Subtotal}\n";
+            orinfo += $"DISCOUNT         :P {result.Discount}\n";
+            orinfo += $"----------------------------\n";
+            orinfo += $"TENDER TYPE      :P {result.TenderType}\n";
+            orinfo += $"TOTAL AMT DUE    :P {result.TotalAmountDue}\n";
+            orinfo += $"AMT TENDERED     :P {result.AmountTendered}\n";
+            orinfo += $"CHANGE           :P {result.Change}\n";
+            orinfo += $"----------------------------\n";
+            orinfo += $"VATable Sales    :P {result.VatableSales}\n";
+            orinfo += $"VAT Amount       :P {result.VatAmount}\n";
+            orinfo += $"VAT Exempt Sales :P {result.VatExempt}\n";
+            orinfo += $"Zero Rated Sales :P {result.ZeroRated}\n";
+            orinfo += $"----------------------------\n";
+            orinfo += $"PARKER INFORMATION\n";
+            orinfo += $"NAME : _____________________\n";
+            orinfo += $"ADDRESS : __________________\n";
+            orinfo += $"TIN: _______________________\n";
+            orinfo += $"SC/PWD ID: _________________\n";
+            orinfo += $"SIGNATURE: _________________\n\n";
+            orinfo += $"----------------------------\n";
+            orinfo += $"SMARTBAS (PHILS.) CORP.\n";
+            orinfo += $"Unit 3106, East Tower, Phil.\n";
+            orinfo += $"Stock Exchange Center\n";
+            orinfo += $"Exchange Road,Ortigas Center,\n";
+            orinfo += $"Pasig City 1605\n";
+            orinfo += $"VAT REG TIN :\n";
+            orinfo += $"010-364-544-000\n";
+            orinfo += $"ACCREDITATION NO :\n";
+            orinfo += $"{result.AccreditationNo} \n";
+            orinfo += $"VALID UNTIL :{result.AccreditationValidUntil} \n";
+            orinfo += $"DATE ISSUED :{result.AccreditationDate} \n";
+            orinfo += $"PTU NO :\n";
+            orinfo += $"{result.PTUNo} \n";
+            orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
+            orinfo += $"THANK YOU!\n";
+            orinfo += $"THIS RECEIPT SHALL BE VALID\n";
+            orinfo += $"FOR FIVE(5) YEARS FROM THE\n";
+            orinfo += $"DATE OF THE PERMIT TO USE\n\n";
+
+            result.Printable = orinfo;
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("api/ticket/searchor")]
+        public async Task<IHttpActionResult> SearchOfficialReceipt(int gateid, string keyword = "")
+        {
+            var items = await services.OfficialReceiptSearch(gateid, keyword);
+            return Ok(items);
+        }
+
         [HttpGet]
         [Route("api/ticket/isvaliduser")]
         public async Task<IHttpActionResult> IsValidUser(string username, string password,string gateid)
@@ -548,6 +632,129 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"---------------------------------------\n";
             item.Body = bodyString;
             return Ok(item);
+        }
+
+
+        #region  CHANGE FUND AND TENDER DECLARATION
+
+        [HttpGet]
+        [Route("api/ticket/checkchangefund")]
+        public async Task<IHttpActionResult> CheckChangeFund(int userid, int gateid)
+        {
+            var result = await services.CheckChangeFund(userid, gateid);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/setchangefund")]
+        public async Task<IHttpActionResult> SetChangeFund(int id, decimal fund)
+        {
+            var result = await services.SetChangeFund(id, fund);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("api/ticket/checktenderdeclaration")]
+        public async Task<IHttpActionResult> CheckTenderDeclaration(int id, int gateid)
+        {
+            var result = await services.CheckTenderDeclaration(id,gateid);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("api/ticket/settenderdeclaration")]
+        public async Task<IHttpActionResult> SetTenderDeclaration(int id, int v1000,int v500,int v200, int v100, int v50, int v20, int v10, int v5, int v1, int vcent, string comment)
+        {
+            var item = new TenderDeclarationValue
+            {
+                Id = id,
+                ValueFor1000 = v1000,
+                ValueFor500 = v500,
+                ValueFor200 = v200,
+                ValueFor100 = v100,
+                ValueFor50 = v50,
+                ValueFor20 = v20,
+                ValueFor10 = v10,
+                ValueFor5 = v5,
+                ValueFor1 = v1,
+                ValueForCent = vcent,
+                Comment = comment,
+            };
+            var result = await services.SetTenderDeclaration(item);
+            return Ok(result);
+        }
+        [HttpGet]
+        [Route("api/ticket/gettenderdeclaration")]
+        public async Task<IHttpActionResult> GetTenderDeclaration(int gateid,int id)
+        {
+            var header = await services.GetReportHeaderAsync(gateid);
+            var item = new ReadingResponse();
+
+            var headerString = string.Empty;
+            headerString += $"{header.Company}\n";
+            headerString += $"{header.Address1}\n";
+            headerString += $"{header.Address2}\n";
+            headerString += $"{header.Address3}\n";
+            headerString += $"VAT REG TIN :\n";
+            headerString += $"{header.TIN} :\n";
+            headerString += $"ACCREDITATION NO :\n";
+            headerString += $"{header.AccreditationNo} :\n";
+            headerString += $"VALID UNTIL :{header.AccreditationValidUntil} \n";
+            headerString += $"DATE ISSUED :{header.AccreditationDate} \n";
+            headerString += $"PTU NO :\n";
+            headerString += $"{header.PTUNo} \n";
+            headerString += $"DATE ISSUED :{header.PTUDateIssued} \n\n";
+            item.Header = headerString;
+            var body = await services.GetTenderDeclaration(id);
+            var bodyString = string.Empty;
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"        TENDER DECLARATION\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"LOCATION  :{body.Location}\n";
+            bodyString += $"GATE      :{body.Gate}\n";
+            bodyString += $"SR NO     :{body.SrNoString}\n";
+            bodyString += $"CASHIER   :{body.Cashier}\n";
+            bodyString += $"SHIFT IN  :{body.ShiftIn}\n";
+            bodyString += $"SHIFT OUT :{body.ShiftOut}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $" COUNT      CASH      AMOUNT\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $" {body.PHP100}       1000 PHP    {(decimal.Parse(body.PHP1000) * 1000).ToString("N2")}\n";
+            bodyString += $" {body.PHP500}       500  PHP    {(decimal.Parse(body.PHP500) * 500).ToString("N2")}\n";
+            bodyString += $" {body.PHP200}       200  PHP    {(decimal.Parse(body.PHP200) * 200).ToString("N2")}\n";
+            bodyString += $" {body.PHP100}       100  PHP    {(decimal.Parse(body.PHP100) * 100).ToString("N2")}\n";
+            bodyString += $" {body.PHP50}       50   PHP    {(decimal.Parse(body.PHP50) * 50).ToString("N2")}\n";
+            bodyString += $" {body.PHP20}       20   PHP    {(decimal.Parse(body.PHP20) * 20).ToString("N2")}\n";
+            bodyString += $" {body.PHP10}       10   PHP    {(decimal.Parse(body.PHP10) * 10).ToString("N2")}\n";
+            bodyString += $" {body.PHP5}       5    PHP    {(decimal.Parse(body.PHP5) * 5).ToString("N2")}\n";
+            bodyString += $" {body.PHP1}       1    PHP    {(decimal.Parse(body.PHP1) * 1).ToString("N2")}\n";
+            bodyString += $" {body.CENT1}       1    CENT   {(decimal.Parse(body.CENT1)/ 100).ToString("N2")}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"TOTAL CASH         :{decimal.Parse(body.TotalConfirmed).ToString("N2")} PHP\n";
+            bodyString += $"TOTAL PARTIAL      :{decimal.Parse(body.Partial).ToString("N2")} PHP\n";
+            item.Body = bodyString;
+            return Ok(item);
+        }
+        #endregion
+        [HttpGet]
+        [Route("api/ticket/getdiscounttypes")]
+        public async Task<IHttpActionResult> GetDiscountTypes()
+        {
+            var items = await services.GetDiscountTypes();
+            return Ok(items);
+        }
+        [HttpGet]
+        [Route("api/ticket/gettransactiontypes")]
+        public async Task<IHttpActionResult> GetTransactionTypes()
+        {
+            var items = await services.TransactionTypes();
+            return Ok(items);
+        }
+        [HttpGet]
+        [Route("api/ticket/resetcounter")]
+        public async Task<IHttpActionResult> ResetCounter(int gateId)
+        {
+            var items = await services.ResetCounter(gateId);
+            return Ok(items);
         }
     }
 }
