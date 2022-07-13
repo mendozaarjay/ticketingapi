@@ -731,6 +731,46 @@ namespace Ticketing.WebApi.Controllers
             item.Body = bodyString;
             return Ok(item);
         }
+
+        [HttpGet]
+        [Route("api/ticket/getchangefundprint")]
+        public async Task<IHttpActionResult> GetChangeFund(int gateid, int id)
+        {
+            var header = await services.GetReportHeaderAsync(gateid);
+            var item = new ReadingResponse();
+
+            var headerString = string.Empty;
+            headerString += $"{header.Company}\n";
+            headerString += $"{header.Address1}\n";
+            headerString += $"{header.Address2}\n";
+            headerString += $"{header.Address3}\n";
+            headerString += $"VAT REG TIN :\n";
+            headerString += $"{header.TIN} :\n";
+            headerString += $"ACCREDITATION NO :\n";
+            headerString += $"{header.AccreditationNo} :\n";
+            headerString += $"VALID UNTIL :{header.AccreditationValidUntil} \n";
+            headerString += $"DATE ISSUED :{header.AccreditationDate} \n";
+            headerString += $"PTU NO :\n";
+            headerString += $"{header.PTUNo} \n";
+            headerString += $"DATE ISSUED :{header.PTUDateIssued} \n\n";
+            item.Header = headerString;
+            var body = await services.GetChangeFund(id);
+            var bodyString = string.Empty;
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"        USER LOG IN\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"LOCATION  :{body.ParkingName}\n";
+            bodyString += $"TERMINAL      :{body.GateName}\n";
+            bodyString += $"SR NO     :{body.SrNoString}\n";
+            bodyString += $"CASHIER NAME   :{body.Username}\n";
+            bodyString += $"SHIFT IN  :{body.TimeIn}\n";
+            bodyString += $"---------------------------------------\n";
+            bodyString += $"        CHANGE FUND\n";
+            bodyString += $"        P {decimal.Parse(body.StartAmount).ToString("N2")}\n";
+            item.Body = bodyString;
+            return Ok(item);
+        }
+
         #endregion
         [HttpGet]
         [Route("api/ticket/getdiscounttypes")]

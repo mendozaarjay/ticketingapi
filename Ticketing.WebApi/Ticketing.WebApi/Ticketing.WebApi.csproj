@@ -178,6 +178,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\Security.cs" />
+    <Compile Include="Models\ChangFundItem.cs" />
     <Compile Include="Models\CalculatedRate.cs" />
     <Compile Include="Models\DiscountType.cs" />
     <Compile Include="Models\OfficialReceiptItem.cs" />

@@ -650,5 +650,32 @@ namespace Ticketing.WebApi.Services
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }
+        public async Task<ChangFundItem> GetChangeFund(int id)
+        {
+            var item = new ChangFundItem();
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[spPrintChangeFund]";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Id", id);
+            var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
+
+
+            if(result != null)
+            {
+                if(result.Rows.Count > 0)
+                {
+                    item = new ChangFundItem
+                    {
+                        GateName = result.Rows[0]["GateName"].ToString(),
+                        ParkingName = result.Rows[0]["ParkingName"].ToString(),
+                        SrNoString = result.Rows[0]["SrNoString"].ToString(),
+                        StartAmount = result.Rows[0]["StartAmount"].ToString(),
+                        TimeIn = result.Rows[0]["TimeIn"].ToString(),
+                        Username = result.Rows[0]["Username"].ToString(),
+                    };
+                }
+            }
+            return item;
+        }
     }
 }
