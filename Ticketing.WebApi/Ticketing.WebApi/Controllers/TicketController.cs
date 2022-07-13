@@ -167,7 +167,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"{result.PTUNo} \n";
                 orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
                 orinfo += $"OFFICIAL RECEIPT\n\n";
-                orinfo += $"RETAIL\n\n";
+                orinfo += $"{result.RateName}\n\n";
                 orinfo += $"OR NO : {result.OrNumber}\n";
                 orinfo += $"TICKET NO : {result.TicketNo}\n";
                 orinfo += $"PLATE NO : {result.PlateNo}\n\n";
@@ -215,9 +215,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"{result.PTUNo} \n";
                 orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
                 orinfo += $"THANK YOU!\n";
-                orinfo += $"THIS RECEIPT SHALL BE VALID\n";
-                orinfo += $"FOR FIVE(5) YEARS FROM THE\n";
-                orinfo += $"DATE OF THE PERMIT TO USE\n\n";
+                
 
                 result.Printable = orinfo;
                 return Ok(result);
@@ -248,7 +246,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"{result.PTUNo} \n";
             orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
             orinfo += $"OFFICIAL RECEIPT (REPRINT)\n\n";
-            orinfo += $"RETAIL\n\n";
+            orinfo += $"{result.RateName}\n\n";
             orinfo += $"OR NO : {result.OrNumber}\n";
             orinfo += $"TICKET NO : {result.TicketNo}\n";
             orinfo += $"PLATE NO : {result.PlateNo}\n\n";
@@ -296,9 +294,8 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"{result.PTUNo} \n";
             orinfo += $"DATE ISSUED :{result.PTUDateIssued} \n\n";
             orinfo += $"THANK YOU!\n";
-            orinfo += $"THIS RECEIPT SHALL BE VALID\n";
-            orinfo += $"FOR FIVE(5) YEARS FROM THE\n";
-            orinfo += $"DATE OF THE PERMIT TO USE\n\n";
+   
+  
 
             result.Printable = orinfo;
             return Ok(result);
@@ -626,7 +623,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"ZERO RATE     : 0.00\n";
             bodyString += $"---------------------------------------\n";
             bodyString += $"Z-COUNT               {body.FirstOrDefault().ZCount}\n";
-            bodyString += $"RESET COUNTER         0\n";
+            bodyString += $"RESET COUNTER         {body.FirstOrDefault().Reset}\n";
             bodyString += $"TOTAL ACCUMULATED SALES  {body.FirstOrDefault().Total}\n";
             bodyString += $"PREPARED BY :   {body.FirstOrDefault().PreparedBy}\n";
             bodyString += $"---------------------------------------\n";

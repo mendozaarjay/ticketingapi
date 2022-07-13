@@ -175,6 +175,7 @@ namespace Ticketing.WebApi.Services
                     VatExempt = result.Rows[0]["VatExempt"].ToString(),
                     ZeroRated = result.Rows[0]["ZeroRated"].ToString(),
                     CashierName = result.Rows[0]["CashierName"].ToString(),
+                    RateName = result.Rows[0]["RateName"].ToString(),
                 };
                 item = or;
             }
@@ -447,6 +448,7 @@ namespace Ticketing.WebApi.Services
                         VatAmount = dr["VatAmount"].ToString(),
                         ZCount = dr["ZCount"].ToString(),
                         PreparedBy = dr["PreparedBy"].ToString(),
+                        Reset = dr["Reset"].ToString(),
                     };
                     items.Add(item);
                 }

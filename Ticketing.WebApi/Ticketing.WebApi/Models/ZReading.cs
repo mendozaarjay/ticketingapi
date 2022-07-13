@@ -32,6 +32,7 @@
         public string VatAmount { get; set; }
         public string Total { get; set; }
         public string ZCount { get; set; }
+        public string Reset { get; set; }
         public string PreparedBy { get; set; }
     }
 }
