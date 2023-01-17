@@ -181,7 +181,13 @@
     <Compile Include="Models\ChangFundItem.cs" />
     <Compile Include="Models\CalculatedRate.cs" />
     <Compile Include="Models\DiscountType.cs" />
+    <Compile Include="Models\GateInformation.cs" />
+    <Compile Include="Models\ReadingItem.cs" />
+    <Compile Include="Models\ReprintType.cs" />
     <Compile Include="Models\OfficialReceiptItem.cs" />
+    <Compile Include="Models\ParkerTicketWithReprint.cs" />
+    <Compile Include="Models\LoginModel.cs" />
+    <Compile Include="Models\TicketItem.cs" />
     <Compile Include="Models\TransactionType.cs" />
     <Compile Include="Models\TenderDeclarationDetails.cs" />
     <Compile Include="Models\TenderDeclarationValue.cs" />
@@ -197,11 +203,13 @@
     <Compile Include="Models\CashierSummary.cs" />
     <Compile Include="Models\YReading.cs" />
     <Compile Include="Models\ChangeFund.cs" />
+    <Compile Include="Models\XReadingItem.cs" />
     <Compile Include="Models\ZReading.cs" />
     <Compile Include="Models\XReading.cs" />
     <Compile Include="Models\VerifiedTicket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers\SCObjects.cs" />
+    <Compile Include="Security\Security.cs" />
     <Compile Include="Services\DataServices.cs" />
   </ItemGroup>
   <ItemGroup>

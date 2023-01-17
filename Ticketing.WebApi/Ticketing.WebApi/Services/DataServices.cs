@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using System.Web.Security;
 using Ticketing.WebApi.Models;
 
 namespace Ticketing.WebApi.Services
@@ -10,6 +11,8 @@ namespace Ticketing.WebApi.Services
     public class DataServices
     {
         public string UserConnection { get; set; }
+        public bool UseEncryption { get; set; }
+
         public async Task<List<Rates>> GetRates(string rate)
         {
             var sql = @"SELECT [rl].[RateName],
@@ -50,12 +53,12 @@ namespace Ticketing.WebApi.Services
         public async Task<List<ParkerType>> GetParkerTypes()
         {
             var sql = "EXEC [dbo].[spGetParkerTypes]";
-            var result =  await SCObjects.LoadDataTableAsync(sql, UserConnection);
+            var result = await SCObjects.LoadDataTableAsync(sql, UserConnection);
             var items = new List<ParkerType>();
 
-            if(result != null)
+            if (result != null)
             {
-                foreach(DataRow dr in result.Rows)
+                foreach (DataRow dr in result.Rows)
                 {
                     var item = new ParkerType
                     {
@@ -91,23 +94,43 @@ namespace Ticketing.WebApi.Services
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }
-        public async Task<int> IsValidUser(string username, string password, string gateid)
+        public async Task<LoginModel> IsValidUser(string username, string password, string gateid)
         {
-            var sql = $"SELECT [dbo].[fnIsValidUser]('{username}','{password}')";
-            var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
-            var userId = int.Parse(result);
-            if(userId > 0)
+            var sql = string.Empty;
+            if (this.UseEncryption)
             {
-                var signin = await this.CheckFirstSignIn(userId, gateid);
+                sql = $"EXEC [dbo].[spMobileCheckUser] @Username = '{username}', @Password = '{Security.Encrypt(password)}'";
             }
-            return userId;
+            else
+            {
+                sql = $"EXEC [dbo].[spMobileCheckUser] @Username = '{username}', @Password = '{password}'";
+            }
+            var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
+
+            if (result.Rows.Count <= 0)
+            {
+                return new LoginModel { IsValid = false };
+            }
+            var userid = result.Rows[0]["UserId"].ToString();
+            var firstname = result.Rows[0]["FirstName"].ToString();
+            var lastname = result.Rows[0]["LastName"].ToString();
+
+            var name = firstname + " " + lastname;
+            var checker = name.Replace(" ", "");
+
+            if(int.Parse(userid) > 0)
+            {
+                await CheckFirstSignIn(int.Parse(userid), gateid);
+            }
+
+            return new LoginModel { IsValid = true, UserId = int.Parse(userid), UserName = username, Name = checker.Length > 0 ? name : username };
         }
         public async Task<string> CheckFirstSignIn(int userid, string gateid)
         {
             var cmd = new SqlCommand();
             cmd.CommandText = "[dbo].[spMobileSignIn]";
             cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@UserId",userid);
+            cmd.Parameters.AddWithValue("@UserId", userid);
             cmd.Parameters.AddWithValue("@GateId", gateid);
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
@@ -137,9 +160,9 @@ namespace Ticketing.WebApi.Services
             cmd.CommandText = "[dbo].[spGetOfficialReceiptInformation]";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@Id", id);
-            var result = await SCObjects.ExecGetDataAsync(cmd,UserConnection);
+            var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
             var item = new OfficialReceipt();
-            if(result != null)
+            if (result != null)
             {
                 var or = new OfficialReceipt
                 {
@@ -166,6 +189,7 @@ namespace Ticketing.WebApi.Services
                     Vat = result.Rows[0]["Vat"].ToString(),
                     Subtotal = result.Rows[0]["SubTotal"].ToString(),
                     Discount = result.Rows[0]["Discount"].ToString(),
+                    DiscountName = result.Rows[0]["DiscountName"].ToString(),
                     TenderType = result.Rows[0]["TenderType"].ToString(),
                     TotalAmountDue = result.Rows[0]["TotalAmountDue"].ToString(),
                     AmountTendered = result.Rows[0]["AmountTendered"].ToString(),
@@ -273,7 +297,7 @@ namespace Ticketing.WebApi.Services
             return items;
         }
 
-        public async Task<string> PerformYReading(int gateid,int userid)
+        public async Task<string> PerformYReading(int gateid, int userid)
         {
             var cmd = new SqlCommand();
             cmd.CommandText = "[dbo].[spPerformYReading]";
@@ -484,9 +508,9 @@ namespace Ticketing.WebApi.Services
             var sql = $"SELECT * FROM [dbo].[fnCheckChangeFundForMobilePos]({userId},{gateId}) [fc]";
             var item = new ChangeFund();
             var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
-            if(result != null)
+            if (result != null)
             {
-                if(result.Rows.Count > 0)
+                if (result.Rows.Count > 0)
                 {
                     item.Id = int.Parse(result.Rows[0]["CashierShiftID"].ToString());
                     item.WithChangeFund = result.Rows[0]["WithChangeFund"].ToString().Equals("1");
@@ -546,9 +570,9 @@ namespace Ticketing.WebApi.Services
             var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
             var item = new TenderDeclarationDetails();
 
-            if(result != null)
+            if (result != null)
             {
-                if(result.Rows.Count > 0)
+                if (result.Rows.Count > 0)
                 {
                     item.ShiftIn = result.Rows[0]["ShiftIn"].ToString();
                     item.ShiftOut = result.Rows[0]["ShiftOut"].ToString();
@@ -582,9 +606,9 @@ namespace Ticketing.WebApi.Services
             var sql = $"EXEC [dbo].[spOfficialReceiptList] @GateId = {gateid}, @Keyword = '{keyword}'";
             var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
             var items = new List<OfficialReceiptItem>();
-            if(result != null)
+            if (result != null)
             {
-                foreach(DataRow dr in result.Rows)
+                foreach (DataRow dr in result.Rows)
                 {
                     var item = new OfficialReceiptItem
                     {
@@ -606,9 +630,9 @@ namespace Ticketing.WebApi.Services
             var sql = "SELECT [ID],[Name],[Type],[Amount] FROM [dbo].[DiscountTypes] WHERE [Disable] = 0";
             var items = new List<DiscountType>();
             var result = await SCObjects.LoadDataTableAsync(sql, this.UserConnection);
-            if(result != null)
+            if (result != null)
             {
-                foreach(DataRow dr in result.Rows)
+                foreach (DataRow dr in result.Rows)
                 {
                     var item = new DiscountType
                     {
@@ -660,9 +684,9 @@ namespace Ticketing.WebApi.Services
             var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
 
 
-            if(result != null)
+            if (result != null)
             {
-                if(result.Rows.Count > 0)
+                if (result.Rows.Count > 0)
                 {
                     item = new ChangFundItem
                     {
@@ -676,6 +700,124 @@ namespace Ticketing.WebApi.Services
                 }
             }
             return item;
+        }
+        public async Task<List<TicketItem>> GetTicketList(int gateid, string keyword)
+        {
+            var items = new List<TicketItem>();
+            var sql = $"EXEC [dbo].[spGetTicketList] @GateId = {gateid},  @Keyword = '{keyword}'";
+            var result = await SCObjects.LoadDataTableAsync(sql, UserConnection);
+            if (result != null)
+            {
+                foreach (DataRow dr in result.Rows)
+                {
+                    var item = new TicketItem
+                    {
+                        Id = int.Parse(dr["Id"].ToString()),
+                        PlateNo = dr["PlateNo"].ToString(),
+                        Ticket = dr["Ticket"].ToString(),
+                        TimeIn = dr["TimeIn"].ToString(),
+                    };
+                    items.Add(item);
+                }
+            }
+            return items;
+        }
+        public async Task<List<XReadingItem>> GetForXReading(int gateid)
+        {
+            var sql = $"EXEC [dbo].[spGetAllForXReading] @GateId = {gateid}";
+            var items = new List<XReadingItem>();
+            var result = await SCObjects.LoadDataTableAsync(sql, UserConnection);
+            if (result != null)
+            {
+                foreach (DataRow dr in result.Rows)
+                {
+                    var item = new XReadingItem
+                    {
+                        Id = dr["Id"].ToString(),
+                        User = dr["User"].ToString(),
+                        Reference = dr["Reference"].ToString(),
+                        TimeIn = dr["TimeIn"].ToString(),
+                        TimeOut = dr["TimeOut"].ToString(),
+                        WithReading = dr["WithReading"].ToString(),
+                    };
+                    items.Add(item);
+                }
+            }
+            return items;
+        }
+        public async Task<int> GetReprintCount(string referenceNo, string type)
+        {
+            var sql = $"EXEC [dbo].[spReprintEntry] @ReferenceNo = '{referenceNo}', @Type = '{type}'";
+            var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
+            if (result == null)
+            {
+                return 0;
+            }
+            return int.Parse(result.ToString());
+        }
+        public async Task<string> SetAuditLogs(string description, int gateId, int userId)
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[spCreateAuditLog]";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@Description", description);
+            cmd.Parameters.AddWithValue("@GateId", gateId);
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
+            return result;
+        }
+        public async Task<List<ReadingItem>> GetReadingItems(int gateId, string type, string keyword)
+        {
+            var items = new List<ReadingItem>();
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[spGetReadingsItem]";
+            cmd.Parameters.Clear();
+            cmd.Parameters.AddWithValue("@GateId", gateId);
+            cmd.Parameters.AddWithValue("@Type", type);
+            cmd.Parameters.AddWithValue("@Keyword", keyword);
+            var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
+            if (result != null)
+            {
+                foreach (DataRow dr in result.Rows)
+                {
+                    var item = new ReadingItem();
+                    item.Id = int.Parse(dr["Id"].ToString());
+                    item.StartDate = dr["StartDate"].ToString();
+                    item.EndDate = dr["EndDate"].ToString();
+                    item.ReferenceNo = dr["ReferenceNo"].ToString();
+                    item.Type = dr["Type"].ToString();
+                    item.PerformedBy = dr["PerformedBy"].ToString();
+                    item.Gate = dr["Gate"].ToString();
+                    items.Add(item);
+                }
+            }
+            return items;
+        }
+        public async Task<GateInformation> GateInformation(int gateId)
+        {
+            var item = new GateInformation();
+            var sql = $"SELECT * FROM [dbo].[GateInformation] [gi] WHERE [gi].[GateId] = {gateId}";
+            var result = await SCObjects.LoadDataTableAsync(sql, UserConnection);
+            if(result != null)
+            {
+                if(result.Rows.Count > 0)
+                {
+                    item.MIN = result.Rows[0]["MIN"].ToString();
+                    item.SN = result.Rows[0]["SN"].ToString();
+                    item.AccreditationNo = result.Rows[0]["AccreditationNo"].ToString();
+                    item.AccreditationDateIssued = result.Rows[0]["AccreditationDateIssued"].ToString();
+                }
+            }
+            return item;
+        }
+        public async Task<bool> CheckIfNonVat(int rateId)
+        {
+            var sql = $@"SELECT ISNULL(MAX(1), 0)
+                        FROM [dbo].[RatesList] [rl]
+                        WHERE [rl].[ApplyVat] = 1
+                              AND [rl].[RateID] = {rateId}";
+            var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
+            return result.Equals("1");
         }
     }
 }

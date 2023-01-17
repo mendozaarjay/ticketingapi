@@ -26,6 +26,7 @@
         public string Vat { get; set; }
         public string Subtotal { get; set; }
         public string Discount { get; set; }
+        public string DiscountName { get; set; }
         public string TenderType { get; set; }
         public string TotalAmountDue { get; set; }
         public string AmountTendered { get; set; }
