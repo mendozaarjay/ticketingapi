@@ -395,6 +395,8 @@ namespace Ticketing.WebApi.Controllers
             //bodyString += $"[C]{header.PTUNo} \n";
             //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
             var body = await services.GetXReadingAsync(srno);
+            //            orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
+            bodyString += $"[C]<b>X READING</b>\n";
             bodyString += $"[L]CASHIER  :{body.FirstOrDefault().CashierName}\n";
             bodyString += $"[L]LOCATION :{body.FirstOrDefault().Location}\n";
             bodyString += $"[L]TERMINAL :{body.FirstOrDefault().Terminal}\n";
@@ -469,6 +471,7 @@ namespace Ticketing.WebApi.Controllers
             //bodyString += $"[C]{header.PTUNo} \n";
             //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
             var body = await services.GetYReadingAsync(srno);
+            bodyString += $"[C]<b>Y READING</b>\n";
             bodyString += $"[L]LOCATION    :{body.FirstOrDefault().Location}\n";
             bodyString += $"[L]TERMINAL    :{body.FirstOrDefault().Terminal}\n";
             bodyString += $"[L]SR NO       :{srno}\n";
@@ -579,6 +582,7 @@ namespace Ticketing.WebApi.Controllers
             //bodyString += $"[C]{header.PTUNo} \n";
             //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
             var body = await services.GetZReadingAsync(srno,userid);
+            bodyString += $"[C]<b>Z READING</b>\n";
             bodyString += $"[L]LOCATION    :{body.FirstOrDefault().Location}\n";
             bodyString += $"[L]TERMINAL    :{body.FirstOrDefault().Terminal}\n";
             bodyString += $"[L]SR NO       :{srno}\n";
@@ -907,6 +911,7 @@ namespace Ticketing.WebApi.Controllers
             //bodyString += $"[C]{header.PTUNo} \n";
             //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
             var body = await services.GetXReadingAsync(srno);
+            bodyString += $"[C]<b>X READING</b>\n";
             var reprint = await services.GetReprintCount(srno, ReprintType.XReading);
             if(reprint > 0)
             {
@@ -980,6 +985,7 @@ namespace Ticketing.WebApi.Controllers
             //bodyString += $"[C]{header.PTUNo} \n";
             //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
             var body = await services.GetYReadingAsync(srno);
+            bodyString += $"[C]<b>Y READING</b>\n";
             var reprint = await services.GetReprintCount(srno, ReprintType.YReading);
             if(reprint > 0)
             {
@@ -1067,6 +1073,7 @@ namespace Ticketing.WebApi.Controllers
             //bodyString += $"[C]{header.PTUNo} \n";
             //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
             var body = await services.GetZReadingAsync(srno, userid);
+            bodyString += $"[C]<b>Z READING</b>\n";
             var reprint = await services.GetReprintCount(srno, ReprintType.ZReading);
             if(reprint > 0)
             {

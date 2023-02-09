@@ -183,6 +183,7 @@
     <Compile Include="Models\DiscountType.cs" />
     <Compile Include="Models\GateInformation.cs" />
     <Compile Include="Models\ReadingItem.cs" />
+    <Compile Include="Models\ReadingResult.cs" />
     <Compile Include="Models\ReprintType.cs" />
     <Compile Include="Models\OfficialReceiptItem.cs" />
     <Compile Include="Models\ParkerTicketWithReprint.cs" />

@@ -145,14 +145,14 @@ namespace Ticketing.WebApi.Services
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }
-        public async Task<string> PerformXReading(int gateid)
+        public async Task<ReadingResult> PerformXReading(int gateid)
         {
             var cmd = new SqlCommand();
             cmd.CommandText = "[dbo].[spPerformXReading]";
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@GateId", gateid);
-            var result = await SCObjects.ExecuteNonQueryWithReturnAsync(cmd, UserConnection);
-            return result;
+            var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
+            return new ReadingResult { Success = result.Rows[0]["Success"].ToString(), Returned = result.Rows[0]["Returned"].ToString() };
         }
         public async Task<OfficialReceipt> GetOfficialReceipt(int id)
         {
