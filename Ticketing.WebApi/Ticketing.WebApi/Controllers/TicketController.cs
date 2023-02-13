@@ -87,7 +87,8 @@ namespace Ticketing.WebApi.Controllers
                 TicketNo = result.Rows[0]["TicketNo"].ToString(),
                 EntranceDate = DateTime.Parse(result.Rows[0]["EntranceDate"].ToString()).ToString("MM/dd/yyyy hh:mm tt"),
                 ExitDate = DateTime.Parse(result.Rows[0]["ExitDate"].ToString()).ToString("MM/dd/yyyy hh:mm tt"),
-                Duration = result.Rows[0]["Duration"].ToString()
+                Duration = result.Rows[0]["Duration"].ToString(),
+                IsCompleted = result.Rows[0]["IsCompleted"].ToString().Equals("1"),
             };
             return Ok(item);
 
@@ -238,7 +239,7 @@ namespace Ticketing.WebApi.Controllers
             }
             else
             {
-                return Ok(Constants.Failed);
+                return NotFound();
             }
 
         }

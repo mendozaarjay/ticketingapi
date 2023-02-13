@@ -13,5 +13,6 @@ namespace Ticketing.WebApi.Models
         public string EntranceDate { get; set; }
         public string ExitDate { get; set; }
         public string Duration { get; set; }
+        public bool IsCompleted { get; set; }  
     }
 }
