@@ -268,7 +268,7 @@ namespace Ticketing.WebApi.Controllers
             {
                 orinfo += $"[C]<b>REPRINT : {reprint}</b>\n\n";
             }
-            if (int.Parse(result.Discount) > 0)
+            if (decimal.Parse(result.Discount) > 0)
             {
                 orinfo += $"[C]<b>DISCOUNT : {result.DiscountName}</b>\n\n";
             }
