@@ -165,6 +165,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Helpers\Calculator.cs" />
+    <Compile Include="Helpers\StringGenerator.cs" />
     <Compile Include="Helpers\Constants.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\TicketController.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="Models\Header.cs" />
     <Compile Include="Models\CashlessType.cs" />
     <Compile Include="Models\CashierSummary.cs" />
+    <Compile Include="Models\UserAccessMatrix.cs" />
     <Compile Include="Models\YReading.cs" />
     <Compile Include="Models\ChangeFund.cs" />
     <Compile Include="Models\XReadingItem.cs" />

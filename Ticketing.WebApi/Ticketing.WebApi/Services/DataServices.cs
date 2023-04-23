@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Threading.Tasks;
 using System.Web.Security;
 using Ticketing.WebApi.Models;
+using WebGrease.Css.Visitor;
 
 namespace Ticketing.WebApi.Services
 {
@@ -340,6 +341,8 @@ namespace Ticketing.WebApi.Services
                         TotalPartial = dr["TotalPartial"].ToString(),
                         TotalTendered = dr["TotalTendered"].ToString(),
                         TotalVariance = dr["TotalVariance"].ToString(),
+                        ParkerRemaining = dr["ParkerRemaining"].ToString(),
+                        ReservedRemaining = dr["ReservedRemaining"].ToString(),
                     };
                     items.Add(item);
                 }
@@ -816,6 +819,49 @@ namespace Ticketing.WebApi.Services
                         FROM [dbo].[RatesList] [rl]
                         WHERE [rl].[ApplyVat] = 1
                               AND [rl].[RateID] = {rateId}";
+            var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
+            return result.Equals("1");
+        }
+        public async Task<List<UserAccessMatrix>> GetUserAccessMatrix(int userId)
+        {
+            var items = new List<UserAccessMatrix>();
+            var cmd = new SqlCommand();
+            cmd.CommandText = "[dbo].[sp_GetUserAccessForHandHeld]";
+            cmd.Parameters.AddWithValue("@UserId", userId);
+            var result = await SCObjects.ExecGetDataAsync(cmd, UserConnection);
+
+            if(result != null)
+            {
+                foreach (DataRow dr in result.Rows)
+                {
+                    var item = new UserAccessMatrix
+                    {
+                        Code = dr["Code"].ToString(),
+                        Description = dr["Description"].ToString(),
+                        CanAdd = dr["CanAdd"].ToString().Equals("1"),
+                        CanAccess = dr["CanAccess"].ToString().Equals("1"),
+                        CanDelete = dr["CanDelete"].ToString().Equals("1"),
+                        CanEdit = dr["CanEdit"].ToString().Equals("1"),
+                        CanExport = dr["CanExport"].ToString().Equals("1"),
+                        CanPrint = dr["CanPrint"].ToString().Equals("1"),
+                        CanSave = dr["CanSave"].ToString().Equals("1"),
+                        CanSearch = dr["CanSearch"].ToString().Equals("1"),
+                    };
+                    items.Add(item);
+                }
+            }
+
+            return items;
+        }
+        public async Task<bool> CheckIfWithReadings(int gateid)
+        {
+            var sql = $"EXEC [dbo].[sp_CheckIfHasReading] @GateId = {gateid}";
+            var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
+            return result.Equals("1");
+        }
+        public async Task<bool> CheckIfWithYReading(int gateid)
+        {
+            var sql = $"EXEC [dbo].[sp_CheckIfWithYReading] @GateId = {gateid}";
             var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
             return result.Equals("1");
         }

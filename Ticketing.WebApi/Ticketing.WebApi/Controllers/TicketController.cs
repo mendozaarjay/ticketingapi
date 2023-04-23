@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -7,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Results;
 using Ticketing.WebApi.Helpers;
 using Ticketing.WebApi.Models;
 using Ticketing.WebApi.Services;
@@ -24,6 +27,15 @@ namespace Ticketing.WebApi.Controllers
             services.UseEncryption = useEncryption.Equals("1");
             services.UserConnection = UserConnectionString;
         }
+
+        [HttpGet]
+        [Route("api/ticket/status")]
+        public async Task<IHttpActionResult> CheckStatus()
+        {
+            bool isApiOnline = true;
+            return Ok(isApiOnline);
+        }
+
         [HttpGet]
         [Route("api/ticket/printticket")]
         public async Task<IHttpActionResult> PrintTicket(string ticketNo, string gateid, string plateNo = "")
@@ -162,6 +174,7 @@ namespace Ticketing.WebApi.Controllers
         [Route("api/ticket/officialreceipt")]
         public async Task<IHttpActionResult> GetOfficialReceiptInfo(string ticketno, int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid, int discountid = 0, string discountamount = "", int cashlesstype = 0, string cashlessreference = "")
         {
+            List<string> toExport = new List<string>();
             var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid,discountid,discountamount,cashlesstype,cashlessreference);
             if (compute.Contains("success"))
             {
@@ -190,7 +203,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[L]TICKET NO: {result.TicketNo}\n";
                 orinfo += $"[L]PLATE NO : {result.PlateNo}\n";
                 orinfo += $"[L]LOCATION : {result.Location}\n";
-                orinfo += $"[L]TERMNIAL : {result.Terminal}\n";
+                orinfo += $"[L]TERMINAL : {result.Terminal}\n";
                 orinfo += $"[L]CASHIER  : {result.CashierName}\n";
                 orinfo += $"[L]TIME IN  : {result.TimeIn}\n";
                 orinfo += $"[L]TIME OUT : {result.TimeOut}\n";
@@ -208,9 +221,9 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]================================\n";
                 //orinfo += $"[L]VATable Sales    :P {result.VatableSales}\n";
                 //orinfo += $"[L]VAT Amount       :P {result.VatAmount}\n";
-                //orinfo += $"[L]VAT Exempt Sales :P {result.VatExempt}\n";
-                //orinfo += $"[L]Zero Rated Sales :P {result.ZeroRated}\n";
-                //orinfo += $"[C]================================\n";
+                orinfo += $"[L]VAT EXEMPT :P {result.VatExempt}\n";
+                orinfo += $"[L]ZERO RATED :P {result.ZeroRated}\n";
+                orinfo += $"[C]================================\n";
                 orinfo += $"[L]PARKER INFORMATION\n";
                 orinfo += $"[L]NAME : _____________________\n";
                 orinfo += $"[L]ADDRESS : __________________\n";
@@ -224,7 +237,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]Exchange Road,Ortigas Center,\n";
                 orinfo += $"[C]Pasig City 1605\n";
                 orinfo += $"[C]VAT REG TIN :\n";
-                orinfo += $"[C]010-364-544-000\n";
+                orinfo += $"[C]{result.TIN} :\n";
                 orinfo += $"[C]ACCREDITATION NO :\n";
                 orinfo += $"[C]{result.AccreditationNo} \n";
                 orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
@@ -235,6 +248,77 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]THANK YOU!\n";
                 orinfo += $"[C]================================\n";
                 result.Printable = orinfo;
+
+                try
+                {
+
+                    toExport.Add(StringGenerator.FormatCenterString(result.Company));
+                    toExport.Add(StringGenerator.FormatCenterString(result.Address1));
+                    toExport.Add(StringGenerator.FormatCenterString(result.Address2));
+                    toExport.Add(StringGenerator.FormatCenterString(result.Address3));
+                    toExport.Add(StringGenerator.FormatCenterString("VAT REG TIN :"));
+                    toExport.Add(StringGenerator.FormatCenterString(result.TIN));
+                    toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
+                    toExport.Add(StringGenerator.FormatCenterString(result.AccreditationNo));
+                    toExport.Add(StringGenerator.FormatCenterString("OFFICIAL RECEIPT"));
+                    toExport.Add(StringGenerator.FormatCenterString(result.RateName));
+                    if (decimal.Parse(result.Discount) > 0)
+                    {
+                        toExport.Add(StringGenerator.FormatCenterString("DISCOUNT : " + result.DiscountName));
+                    }
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("OR NO", result.OrNumber));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("TICKET NO", result.TicketNo));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("PLATE NO", result.PlateNo));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", result.Location));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("TERMINAL", result.Terminal));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("CASHIER", result.CashierName));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME IN", result.TimeIn));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME OUT", result.TimeOut));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("DURATION", result.Duration));
+                    toExport.Add(StringGenerator.AddNewLineSeparator());
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("TOTAL W/ VAT", result.TotalWithVaT));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT", result.Vat));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("SUBTOTAL", result.Subtotal));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("DISCOUNT", result.Discount));
+                    toExport.Add(StringGenerator.AddNewLineSeparator());
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("TENDER TYPE ", result.TenderType, true));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("TOTAL AMT DUE", result.TotalAmountDue));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMT TENDERED", result.AmountTendered));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("CHANGE", result.Change));
+                    toExport.Add(StringGenerator.AddNewLineSeparator());
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT EXEMPT", result.AmountTendered));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("ZERO RATED", result.Change));
+                    toExport.Add(StringGenerator.AddNewLineSeparator());
+                    toExport.Add("PARKER INFORMATION");
+                    toExport.Add(StringGenerator.FormatLabel("NAME"));
+                    toExport.Add(StringGenerator.FormatLabel("ADDRESS"));
+                    toExport.Add(StringGenerator.FormatLabel("TIN"));
+                    toExport.Add(StringGenerator.FormatLabel("SC/PWD ID"));
+                    toExport.Add(StringGenerator.FormatLabel("SIGNATURE"));
+                    toExport.Add(StringGenerator.AddNewLineSeparator());
+                    toExport.Add(StringGenerator.FormatCenterString("SMARTBAS (PHILS.) CORP.\n"));
+                    toExport.Add(StringGenerator.FormatCenterString("Unit 3106, East Tower, Phil."));
+                    toExport.Add(StringGenerator.FormatCenterString("Stock Exchange Center"));
+                    toExport.Add(StringGenerator.FormatCenterString("Exchange Road,Ortigas Center,"));
+                    toExport.Add(StringGenerator.FormatCenterString("Pasig City 1605"));
+                    toExport.Add(StringGenerator.FormatCenterString("VAT REG TIN :"));
+                    toExport.Add(StringGenerator.FormatCenterString(result.TIN));
+                    toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
+                    toExport.Add(StringGenerator.FormatCenterString(result.AccreditationNo));
+                    toExport.Add(StringGenerator.FormatCenterString($"VALID UNTIL :{result.AccreditationValidUntil} "));
+                    toExport.Add(StringGenerator.FormatCenterString($"DATE ISSUED :{result.AccreditationDate}"));
+                    toExport.Add(StringGenerator.FormatCenterString($"PTU NO :"));
+                    toExport.Add(StringGenerator.FormatCenterString($"{result.PTUNo}"));
+                    toExport.Add(StringGenerator.FormatCenterString($"DATE ISSUED :{result.PTUDateIssued}"));
+                    toExport.Add(StringGenerator.FormatCenterString("THANK YOU!"));
+                    toExport.Add(StringGenerator.AddNewLineSeparator());
+                    StringGenerator.GenerateJournal(JournalType.OfficialReceipt, toExport, result.OrNumber);
+                }
+                catch (Exception e)
+                {
+
+                }
+
                 return Ok(result);
             }
             else
@@ -277,7 +361,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[L]TICKET NO: {result.TicketNo}\n";
             orinfo += $"[L]PLATE NO : {result.PlateNo}\n";
             orinfo += $"[L]LOCATION : {result.Location}\n";
-            orinfo += $"[L]TERMNIAL : {result.Terminal}\n";
+            orinfo += $"[L]TERMINAL : {result.Terminal}\n";
             orinfo += $"[L]CASHIER  : {result.CashierName}\n";
             orinfo += $"[L]TIME IN  : {result.TimeIn}\n";
             orinfo += $"[L]TIME OUT : {result.TimeOut}\n";
@@ -295,8 +379,8 @@ namespace Ticketing.WebApi.Controllers
             //orinfo += $"[C]================================\n";
             //orinfo += $"[L]VATable Sales    :P {result.VatableSales}\n";
             //orinfo += $"[L]VAT Amount       :P {result.VatAmount}\n";
-            //orinfo += $"[L]VAT Exempt Sales :P {result.VatExempt}\n";
-            //orinfo += $"[L]Zero Rated Sales :P {result.ZeroRated}\n";
+            orinfo += $"[L]VAT EXEMPT :P {result.VatExempt}\n";
+            orinfo += $"[L]ZERO RATED :P {result.ZeroRated}\n";
             orinfo += $"[C]================================\n";
             orinfo += $"[L]PARKER INFORMATION\n";
             orinfo += $"[L]NAME : _____________________\n";
@@ -311,7 +395,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]Exchange Road,Ortigas Center,\n";
             orinfo += $"[C]Pasig City 1605\n";
             orinfo += $"[C]VAT REG TIN :\n";
-            orinfo += $"[C]010-364-544-000\n";
+            orinfo += $"[C]{result.TIN} :\n";
             orinfo += $"[C]ACCREDITATION NO :\n";
             orinfo += $"[C]{result.AccreditationNo} \n";
             orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
@@ -379,6 +463,7 @@ namespace Ticketing.WebApi.Controllers
         [Route("api/ticket/xreading")]
         public async Task<IHttpActionResult> GetXReadingDetails(int gateid, string srno)
         {
+            var toExport = new List<string>();
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
             var bodyString = string.Empty;
@@ -389,14 +474,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             var body = await services.GetXReadingAsync(srno);
-            //            orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
             bodyString += $"[C]<b>X READING</b>\n";
             bodyString += $"[L]CASHIER  :{body.FirstOrDefault().CashierName}\n";
             bodyString += $"[L]LOCATION :{body.FirstOrDefault().Location}\n";
@@ -407,7 +486,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]================================\n";
             bodyString += $"[L]TYPE       IN    OUT   REMAINING\n";
             bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] \n";     
-            bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedIn} [R] \n";
+            bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedOut} [R] \n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]SALES COUNTER\n";
             bodyString += $"[C]================================\n";
@@ -441,6 +520,64 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]VARIANCE          :[R]{body.FirstOrDefault().TotalVariance}\n";
             bodyString += $"[C]================================\n";
             item.Body = bodyString;
+
+            try
+            {
+                toExport.Add(StringGenerator.FormatCenterString(header.Company));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address1));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address2));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address3));
+                toExport.Add(StringGenerator.FormatCenterString("VAT REG TIN :"));
+                toExport.Add(StringGenerator.FormatCenterString(header.TIN));
+                toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
+                toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
+                toExport.Add(StringGenerator.FormatCenterString("X READING"));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("CASHIER", body.FirstOrDefault().CashierName));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", body.FirstOrDefault().Location));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TERMINAL", body.FirstOrDefault().Terminal));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("SR NO", srno));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME IN", body.FirstOrDefault().TimeIn.ToUpper()));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME OUT", body.FirstOrDefault().TimeOut.ToUpper()));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "IN", "OUT"));
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("PARKER", body.FirstOrDefault().ParkerIn, body.FirstOrDefault().ParkerOut));
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("RESERVED", body.FirstOrDefault().ReservedIn, body.FirstOrDefault().ReservedOut));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("SALES COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("RATE TYPE", "COUNT", "AMOUNT"));
+                foreach (var bodyItem in body)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("PENALTY COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("LOST CARD", body.FirstOrDefault().LostCardCount, decimal.Parse(body.FirstOrDefault().LostCardAmount).ToString("N2")));
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("OVER NIGHT", body.FirstOrDefault().OvernightCount, decimal.Parse(body.FirstOrDefault().OvernightAmount).ToString("N2")));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("CASHLESS COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                foreach (var bodyItem in cashless)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TRANSACTION", body.FirstOrDefault().TotalTransaction,true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL PARTIAL", body.FirstOrDefault().TotalPartial,true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TENDERED", body.FirstOrDefault().TotalTendered,true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("VARIANCE ", body.FirstOrDefault().TotalVariance, true));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                StringGenerator.GenerateJournal(JournalType.XReading, toExport, srno);
+            }
+            catch (Exception e)
+            {
+
+            }
             return Ok(item);
         }
         [HttpGet]
@@ -454,6 +591,7 @@ namespace Ticketing.WebApi.Controllers
         [Route("api/ticket/yreading")]
         public async Task<IHttpActionResult> GetYReadingDetails(int gateid, string srno)
         {
+            var toExport = new List<string>();
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
 
@@ -465,12 +603,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             var body = await services.GetYReadingAsync(srno);
             bodyString += $"[C]<b>Y READING</b>\n";
             bodyString += $"[L]LOCATION    :{body.FirstOrDefault().Location}\n";
@@ -480,11 +613,11 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]TIME OUT    :{body.FirstOrDefault().TimeOut.ToUpper()}\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]TYPE       IN    OUT   REMAINING\n";
-            bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] \n";
-            bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedIn} [R] \n";
+            bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] {body.FirstOrDefault().ParkerRemaining} \n";
+            bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedIn} [R] {body.FirstOrDefault().ReservedRemaining}\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]SALES COUNTER\n";
-            bodyString += $"[L]---------------------------------------\n";
+            bodyString += $"[C]================================\n";
             bodyString += $"[L]RATE TYPE        COUNT     AMOUNT\n";
             bodyString += $"[C]================================\n";
             foreach (var bodyItem in body)
@@ -503,7 +636,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]================================\n";
             bodyString += $"[L]TYPE        COUNT     AMOUNT\n";
             bodyString += $"[C]================================\n";
-            var cashless = await services.GetCashlessForXReading(srno);
+            var cashless = await services.GetCashlessForYReading(srno);
             foreach (var bodyItem in cashless)
             {
                 bodyString += $"{bodyItem.RateType}[R]{bodyItem.Count}  [R]{bodyItem.Amount}\n";
@@ -530,6 +663,75 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]VARIANCE          :[R]{body.FirstOrDefault().TotalVariance}\n";
             bodyString += $"[C]================================\n";
             item.Body = bodyString;
+
+            try
+            {
+                toExport.Add(StringGenerator.FormatCenterString(header.Company));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address1));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address2));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address3));
+                toExport.Add(StringGenerator.FormatCenterString("VAT REG TIN :"));
+                toExport.Add(StringGenerator.FormatCenterString(header.TIN));
+                toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
+                toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
+                toExport.Add(StringGenerator.FormatCenterString("Y READING"));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", body.FirstOrDefault().Location));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TERMINAL", body.FirstOrDefault().Terminal));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("SR NO", srno));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME IN", body.FirstOrDefault().TimeIn.ToUpper()));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME OUT", body.FirstOrDefault().TimeOut.ToUpper()));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithFourColumns("TYPE", "IN", "OUT", "REMAINING"));
+                toExport.Add(StringGenerator.FormatLabelWithFourColumns("PARKER", body.FirstOrDefault().ParkerIn, body.FirstOrDefault().ParkerOut, body.FirstOrDefault().ParkerRemaining));
+                toExport.Add(StringGenerator.FormatLabelWithFourColumns("RESERVED", body.FirstOrDefault().ReservedIn, body.FirstOrDefault().ReservedOut, body.FirstOrDefault().ReservedRemaining));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("SALES COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("RATE TYPE","COUNT","AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                foreach (var bodyItem in body)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("PENALTY COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("LOST CARD", body.FirstOrDefault().LostCardCount, decimal.Parse(body.FirstOrDefault().LostCardAmount).ToString("N2")));
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("OVER NIGHT", body.FirstOrDefault().OvernightCount, decimal.Parse(body.FirstOrDefault().OvernightAmount).ToString("N2")));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("CASHLESS COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                foreach (var bodyItem in cashless)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("CASHIER COLLECTION SUMMARY");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("CASHIER SALES");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithFourColumns("NAME", "START", "NO", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                foreach (var i in summary)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithFourColumns(i.Cashier, i.TimeIn, i.Count, decimal.Parse(i.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TRANSACTION",decimal.Parse(body.FirstOrDefault().TotalTransaction).ToString("N2"),true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL PARTIAL", decimal.Parse(body.FirstOrDefault().TotalPartial).ToString("N2"),true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TENDERED", decimal.Parse(body.FirstOrDefault().TotalTendered).ToString("N2"),true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("VARIANCE", decimal.Parse(body.FirstOrDefault().TotalVariance).ToString("N2"),true));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                StringGenerator.GenerateJournal(JournalType.YReading, toExport,srno);
+            }
+            catch (Exception ex)
+            {
+
+            }
             return Ok(item);
         }
         [HttpGet]
@@ -565,6 +767,7 @@ namespace Ticketing.WebApi.Controllers
         [Route("api/ticket/zreading")]
         public async Task<IHttpActionResult> GetZReadingDetails(int gateid, string srno, int userid)
         {
+            var toExport = new List<string>();
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
 
@@ -576,12 +779,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             var body = await services.GetZReadingAsync(srno,userid);
             bodyString += $"[C]<b>Z READING</b>\n";
             bodyString += $"[L]LOCATION    :{body.FirstOrDefault().Location}\n";
@@ -640,7 +838,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]================================\n";
             bodyString += $"[L]VATABLE SALES : [R]{body.FirstOrDefault().VatableSales}\n";
             bodyString += $"[L]VAT AMOUNT    : [R]{body.FirstOrDefault().VatAmount}\n";
-            bodyString += $"[L]VAT EXEPMT    : [R]0.00\n";
+            bodyString += $"[L]VAT EXEMPT    : [R]0.00\n";
             bodyString += $"[L]ZERO RATE     : [R]0.00\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]Z-COUNT [R]{body.FirstOrDefault().ZCount}\n";
@@ -649,6 +847,87 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]PREPARED BY : [R]{body.FirstOrDefault().PreparedBy}\n";
             bodyString += $"[C]================================\n";
             item.Body = bodyString;
+
+            try
+            {
+                toExport.Add(StringGenerator.FormatCenterString(header.Company));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address1));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address2));
+                toExport.Add(StringGenerator.FormatCenterString(header.Address3));
+                toExport.Add(StringGenerator.FormatCenterString("VAT REG TIN :"));
+                toExport.Add(StringGenerator.FormatCenterString(header.TIN));
+                toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
+                toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
+                toExport.Add(StringGenerator.FormatCenterString("Z READING"));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", body.FirstOrDefault().Location));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TERMINAL", body.FirstOrDefault().Terminal));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("SR NO", srno));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME IN", body.FirstOrDefault().TimeIn.ToUpper()));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TIME OUT", body.FirstOrDefault().TimeOut.ToUpper()));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("TICKET COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("NEW R-TICKET NO", body.FirstOrDefault().NewRT));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("OLD R-TICKET NO", body.FirstOrDefault().OldRT));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("NEW F-TICKET NO", body.FirstOrDefault().NewFT));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("OLD F-TICKET NO", body.FirstOrDefault().OldFT));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("RECEIPT COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("NEW FR NO", body.FirstOrDefault().NewFR));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("OLD FR NO", body.FirstOrDefault().OldFR));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("NEW OR NO", body.FirstOrDefault().NewOR));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("OLD OR NO", body.FirstOrDefault().OldOR));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("SALES");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("OLD GRAND SALES", body.FirstOrDefault().OldGrandSales));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TODAY SALES", body.FirstOrDefault().TodaySales));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("NEW GRAND SALES ", body.FirstOrDefault().NewGrandSales));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("SALES COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("RATE TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                foreach (var bodyItem in body)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("PENALTY COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("LOST CARD", body.FirstOrDefault().LostCardCount, decimal.Parse(body.FirstOrDefault().LostCardAmount).ToString("N2")));
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("OVER NIGHT", body.FirstOrDefault().OvernightCount, decimal.Parse(body.FirstOrDefault().OvernightAmount).ToString("N2")));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("CASHLESS COUNTER");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithThreeColumns("TYPE", "COUNT", "AMOUNT"));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                foreach (var bodyItem in cashless)
+                {
+                    toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
+                }
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add("VAT BREAKDOWN");
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("VATABLE SALES", decimal.Parse(body.FirstOrDefault().VatableSales).ToString("N2"), true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("VAT AMOUNT", decimal.Parse(body.FirstOrDefault().VatAmount).ToString("N2"), true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("VAT EXEMPT", "0.00", true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("ZERO RATE", "0.00", true));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("Z-COUNT", body.FirstOrDefault().ZCount, true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("RESET COUNTER", body.FirstOrDefault().Reset, true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL ACCUMULATED SALES", decimal.Parse(body.FirstOrDefault().Total).ToString("N2"), true));
+                toExport.Add(StringGenerator.FormatPreparedBy("PREPARED BY", body.FirstOrDefault().PreparedBy));
+                toExport.Add(StringGenerator.AddNewLineSeparator());
+
+                StringGenerator.GenerateJournal(JournalType.ZReading, toExport, srno);
+            }
+            catch (Exception ex)
+            {
+            }
             return Ok(item);
         }
 
@@ -715,7 +994,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
             //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
             //bodyString += $"[C]PTU NO :\n";
@@ -766,7 +1045,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
             //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
             //bodyString += $"[C]PTU NO :\n";
@@ -905,7 +1184,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
             //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
             //bodyString += $"[C]PTU NO :\n";
@@ -979,7 +1258,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
             //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
             //bodyString += $"[C]PTU NO :\n";
@@ -999,8 +1278,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]TIME OUT    :{body.FirstOrDefault().TimeOut.ToUpper()}\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]TYPE       IN    OUT   REMAINING\n";
-            bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] \n";
-            bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedIn} [R] \n";
+            bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] {body.FirstOrDefault().ParkerRemaining} \n";
+            bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedIn} [R] {body.FirstOrDefault().ReservedRemaining}\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]SALES COUNTER\n";
             bodyString += $"[L]---------------------------------------\n";
@@ -1022,7 +1301,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]================================\n";
             bodyString += $"[L]TYPE        COUNT     AMOUNT\n";
             bodyString += $"[C]================================\n";
-            var cashless = await services.GetCashlessForXReading(srno);
+            var cashless = await services.GetCashlessForYReading(srno);
             foreach (var bodyItem in cashless)
             {
                 bodyString += $"{bodyItem.RateType}[R]{bodyItem.Count}  [R]{bodyItem.Amount}\n";
@@ -1067,7 +1346,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]VAT REG TIN :\n";
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
-            bodyString += $"[C]{header.AccreditationNo} :\n";
+            bodyString += $"[C]{header.AccreditationNo}\n";
             //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
             //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
             //bodyString += $"[C]PTU NO :\n";
@@ -1136,7 +1415,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]================================\n";
             bodyString += $"[L]VATABLE SALES : [R]{body.FirstOrDefault().VatableSales}\n";
             bodyString += $"[L]VAT AMOUNT    : [R]{body.FirstOrDefault().VatAmount}\n";
-            bodyString += $"[L]VAT EXEPMT    : [R]0.00\n";
+            bodyString += $"[L]VAT EXEMPT    : [R]0.00\n";
             bodyString += $"[L]ZERO RATE     : [R]0.00\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]Z-COUNT [R]{body.FirstOrDefault().ZCount}\n";
@@ -1146,6 +1425,40 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]================================\n";
             item.Body = bodyString;
             return Ok(item);
+        }
+
+        [HttpGet]
+        [Route("api/ticket/getuseraccess")]
+        public async Task<IHttpActionResult> GetUserAccess(int id)
+        {
+            var result = await services.GetUserAccessMatrix(id);
+            var serializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+            return Json(result,serializerSettings);
+        }
+        [HttpGet]
+        [Route("api/ticket/checkifwithreading")]
+        public async Task<IHttpActionResult> CheckIfWithReading(int id)
+        {
+            var result = await services.CheckIfWithReadings(id);
+            var serializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+            return Json(result, serializerSettings);
+        }
+        [HttpGet]
+        [Route("api/ticket/checkifwithyreading")]
+        public async Task<IHttpActionResult> CheckIfWithYReading(int id)
+        {
+            var result = await services.CheckIfWithYReading(id);
+            var serializerSettings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+            return Json(result, serializerSettings);
         }
         #endregion
     }
