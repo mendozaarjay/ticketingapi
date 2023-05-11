@@ -188,11 +188,6 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]{result.TIN} :\n";
                 orinfo += $"[C]ACCREDITATION NO :\n";
                 orinfo += $"[C]{result.AccreditationNo} :\n";
-                //orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
-                //orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
-                //orinfo += $"[C]PTU NO :\n";
-                //orinfo += $"[C]{result.PTUNo} \n";
-                //orinfo += $"[C]DATE ISSUED :{result.PTUDateIssued} \n\n";
                 orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
                 orinfo += $"[C]<b>{result.RateName}</b>\n\n";
                 if(decimal.Parse(result.Discount) > 0)
@@ -211,6 +206,8 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]================================\n";
                 orinfo += $"[L]TOTAL W/ VAT  :P {result.TotalWithVaT}\n";
                 orinfo += $"[L]VAT           :P {result.Vat}\n";
+                orinfo += $"[L]VAT EXEMPT    :P {result.VatExempt}\n";
+                orinfo += $"[L]ZERO RATED    :P {result.ZeroRated}\n";
                 orinfo += $"[L]SUBTOTAL      :P {result.Subtotal}\n";
                 orinfo += $"[L]DISCOUNT      :P {result.Discount}\n";
                 orinfo += $"[C]================================\n";
@@ -218,11 +215,6 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[L]TOTAL AMT DUE :P {result.TotalAmountDue}\n";
                 orinfo += $"[L]AMT TENDERED  :P {result.AmountTendered}\n";
                 orinfo += $"[L]CHANGE        :P {result.Change}\n";
-                orinfo += $"[C]================================\n";
-                //orinfo += $"[L]VATable Sales    :P {result.VatableSales}\n";
-                //orinfo += $"[L]VAT Amount       :P {result.VatAmount}\n";
-                orinfo += $"[L]VAT EXEMPT :P {result.VatExempt}\n";
-                orinfo += $"[L]ZERO RATED :P {result.ZeroRated}\n";
                 orinfo += $"[C]================================\n";
                 orinfo += $"[L]PARKER INFORMATION\n";
                 orinfo += $"[L]NAME : _____________________\n";
@@ -278,6 +270,8 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.AddNewLineSeparator());
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("TOTAL W/ VAT", result.TotalWithVaT));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT", result.Vat));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT EXEMPT", result.AmountTendered));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("ZERO RATED", result.Change));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("SUBTOTAL", result.Subtotal));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("DISCOUNT", result.Discount));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
@@ -285,9 +279,6 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("TOTAL AMT DUE", result.TotalAmountDue));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMT TENDERED", result.AmountTendered));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("CHANGE", result.Change));
-                    toExport.Add(StringGenerator.AddNewLineSeparator());
-                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT EXEMPT", result.AmountTendered));
-                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("ZERO RATED", result.Change));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
                     toExport.Add("PARKER INFORMATION");
                     toExport.Add(StringGenerator.FormatLabel("NAME"));
@@ -342,11 +333,6 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]{result.TIN} :\n";
             orinfo += $"[C]ACCREDITATION NO :\n";
             orinfo += $"[C]{result.AccreditationNo} :\n";
-            //orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
-            //orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
-            //orinfo += $"[C]PTU NO :\n";
-            //orinfo += $"[C]{result.PTUNo} \n";
-            //orinfo += $"[C]DATE ISSUED :{result.PTUDateIssued} \n\n";
             orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
             if(reprint > 0)
             {
@@ -369,6 +355,8 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]================================\n";
             orinfo += $"[L]TOTAL W/ VAT  :P {result.TotalWithVaT}\n";
             orinfo += $"[L]VAT           :P {result.Vat}\n";
+            orinfo += $"[L]VAT EXEMPT    :P {result.VatExempt}\n";
+            orinfo += $"[L]ZERO RATED    :P {result.ZeroRated}\n";
             orinfo += $"[L]SUBTOTAL      :P {result.Subtotal}\n";
             orinfo += $"[L]DISCOUNT      :P {result.Discount}\n";
             orinfo += $"[C]================================\n";
@@ -376,11 +364,6 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[L]TOTAL AMT DUE :P {result.TotalAmountDue}\n";
             orinfo += $"[L]AMT TENDERED  :P {result.AmountTendered}\n";
             orinfo += $"[L]CHANGE        :P {result.Change}\n";
-            //orinfo += $"[C]================================\n";
-            //orinfo += $"[L]VATable Sales    :P {result.VatableSales}\n";
-            //orinfo += $"[L]VAT Amount       :P {result.VatAmount}\n";
-            orinfo += $"[L]VAT EXEMPT :P {result.VatExempt}\n";
-            orinfo += $"[L]ZERO RATED :P {result.ZeroRated}\n";
             orinfo += $"[C]================================\n";
             orinfo += $"[L]PARKER INFORMATION\n";
             orinfo += $"[L]NAME : _____________________\n";
