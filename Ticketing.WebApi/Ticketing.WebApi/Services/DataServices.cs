@@ -865,5 +865,11 @@ namespace Ticketing.WebApi.Services
             var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
             return result.Equals("1");
         }
+        public async Task<int> GetGatePerTransit(int transitId)
+        {
+            var sql = $"SELECT [t].[PaymentGateID] FROM [dbo].[Transits] [t] WHERE [t].[TransitID] = {transitId}";
+            var result = await SCObjects.ReturnTextAsync(sql, UserConnection);
+            return int.Parse(result);
+        }
     }
 }

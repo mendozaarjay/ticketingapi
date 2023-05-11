@@ -56,11 +56,14 @@ namespace Ticketing.WebApi.Controllers
                Terminal = dt.Rows[0]["Terminal"].ToString(),
                Location = dt.Rows[0]["Location"].ToString(),
             };
+            var gateinfo = await services.GateInformation(int.Parse(gateid));
             var ticketInfo = string.Empty;
             ticketInfo += $"[C]{ticket.Company}\n";
             ticketInfo += $"[C]{ticket.Address1}\n";
             ticketInfo += $"[C]{ticket.Address2}\n";
             ticketInfo += $"[C]{ticket.Address3}\n";
+            ticketInfo += $"[C]MIN : {gateinfo.MIN}\n";
+            ticketInfo += $"[C]S/N : {gateinfo.SN}\n";
             ticketInfo += $"[C]================================\n";
             ticketInfo += $"[L]TIN      : {ticket.TIN}\n";
             ticketInfo += $"[L]PLATENO  : {ticket.PlateNo}\n";
@@ -179,6 +182,10 @@ namespace Ticketing.WebApi.Controllers
             if (compute.Contains("success"))
             {
                 var result = await services.GetOfficialReceipt(transitid);
+
+                var gateid = await services.GetGatePerTransit(transitid);
+                var gateinfo = await services.GateInformation(gateid);
+
                 var orinfo = string.Empty;
                 orinfo += $"[C]{result.Company}\n";
                 orinfo += $"[C]{result.Address1}\n";
@@ -188,6 +195,8 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]{result.TIN} :\n";
                 orinfo += $"[C]ACCREDITATION NO :\n";
                 orinfo += $"[C]{result.AccreditationNo} :\n";
+                orinfo += $"[C]MIN : {gateinfo.MIN}\n";
+                orinfo += $"[C]S/N : {gateinfo.SN}\n";
                 orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
                 orinfo += $"[C]<b>{result.RateName}</b>\n\n";
                 if(decimal.Parse(result.Discount) > 0)
@@ -232,7 +241,6 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]{result.TIN} :\n";
                 orinfo += $"[C]ACCREDITATION NO :\n";
                 orinfo += $"[C]{result.AccreditationNo} \n";
-                orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
                 orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
                 orinfo += $"[C]PTU NO :\n";
                 orinfo += $"[C]{result.PTUNo} \n";
@@ -296,7 +304,6 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatCenterString(result.TIN));
                     toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
                     toExport.Add(StringGenerator.FormatCenterString(result.AccreditationNo));
-                    toExport.Add(StringGenerator.FormatCenterString($"VALID UNTIL :{result.AccreditationValidUntil} "));
                     toExport.Add(StringGenerator.FormatCenterString($"DATE ISSUED :{result.AccreditationDate}"));
                     toExport.Add(StringGenerator.FormatCenterString($"PTU NO :"));
                     toExport.Add(StringGenerator.FormatCenterString($"{result.PTUNo}"));
@@ -323,6 +330,9 @@ namespace Ticketing.WebApi.Controllers
         public async Task<IHttpActionResult> ReprintOfficialReceipt(int transitid)
         {
             var result = await services.GetOfficialReceipt(transitid);
+            var gate = await services.GetGatePerTransit(transitid);
+            var gateinfo = await services.GateInformation(gate);
+
             var reprint = await services.GetReprintCount(result.OrNumber, ReprintType.OfficialReceipt);
             var orinfo = string.Empty;
             orinfo += $"[C]{result.Company}\n";
@@ -333,6 +343,8 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]{result.TIN} :\n";
             orinfo += $"[C]ACCREDITATION NO :\n";
             orinfo += $"[C]{result.AccreditationNo} :\n";
+            orinfo += $"[C]MIN : {gateinfo.MIN}\n";
+            orinfo += $"[C]S/N : {gateinfo.SN}\n";
             orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
             if(reprint > 0)
             {
@@ -381,7 +393,6 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]{result.TIN} :\n";
             orinfo += $"[C]ACCREDITATION NO :\n";
             orinfo += $"[C]{result.AccreditationNo} \n";
-            orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
             orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
             orinfo += $"[C]PTU NO :\n";
             orinfo += $"[C]{result.PTUNo} \n";
@@ -448,6 +459,7 @@ namespace Ticketing.WebApi.Controllers
         {
             var toExport = new List<string>();
             var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
             var item = new ReadingResponse();
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
@@ -458,6 +470,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetXReadingAsync(srno);
             bodyString += $"[C]<b>X READING</b>\n";
             bodyString += $"[L]CASHIER  :{body.FirstOrDefault().CashierName}\n";
@@ -514,6 +528,8 @@ namespace Ticketing.WebApi.Controllers
                 toExport.Add(StringGenerator.FormatCenterString(header.TIN));
                 toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
                 toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
+                toExport.Add(StringGenerator.FormatCenterString($"MIN : {gateinfo.MIN}"));
+                toExport.Add(StringGenerator.FormatCenterString($"S/N : {gateinfo.SN}"));
                 toExport.Add(StringGenerator.FormatCenterString("X READING"));
                 toExport.Add(StringGenerator.FormatLabelWithStringValue("CASHIER", body.FirstOrDefault().CashierName));
                 toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", body.FirstOrDefault().Location));
@@ -577,7 +593,7 @@ namespace Ticketing.WebApi.Controllers
             var toExport = new List<string>();
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
-
+            var gateinfo = await services.GateInformation(gateid);
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
             bodyString += $"[C]{header.Address1}\n";
@@ -587,6 +603,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetYReadingAsync(srno);
             bodyString += $"[C]<b>Y READING</b>\n";
             bodyString += $"[L]LOCATION    :{body.FirstOrDefault().Location}\n";
@@ -656,6 +674,9 @@ namespace Ticketing.WebApi.Controllers
                 toExport.Add(StringGenerator.FormatCenterString("VAT REG TIN :"));
                 toExport.Add(StringGenerator.FormatCenterString(header.TIN));
                 toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
+                toExport.Add(StringGenerator.FormatCenterString($"MIN : {gateinfo.MIN}"));
+                toExport.Add(StringGenerator.FormatCenterString($"S/N : {gateinfo.SN}"));
+                toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
                 toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
                 toExport.Add(StringGenerator.FormatCenterString("Y READING"));
                 toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", body.FirstOrDefault().Location));
@@ -753,7 +774,7 @@ namespace Ticketing.WebApi.Controllers
             var toExport = new List<string>();
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
-
+            var gateinfo = await services.GateInformation(gateid);
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
             bodyString += $"[C]{header.Address1}\n";
@@ -763,6 +784,9 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
+
             var body = await services.GetZReadingAsync(srno,userid);
             bodyString += $"[C]<b>Z READING</b>\n";
             bodyString += $"[L]LOCATION    :{body.FirstOrDefault().Location}\n";
@@ -841,6 +865,8 @@ namespace Ticketing.WebApi.Controllers
                 toExport.Add(StringGenerator.FormatCenterString(header.TIN));
                 toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
                 toExport.Add(StringGenerator.FormatCenterString(header.AccreditationNo));
+                toExport.Add(StringGenerator.FormatCenterString($"MIN : {gateinfo.MIN}"));
+                toExport.Add(StringGenerator.FormatCenterString($"S/N : {gateinfo.SN}"));
                 toExport.Add(StringGenerator.FormatCenterString("Z READING"));
                 toExport.Add(StringGenerator.FormatLabelWithStringValue("LOCATION", body.FirstOrDefault().Location));
                 toExport.Add(StringGenerator.FormatLabelWithStringValue("TERMINAL", body.FirstOrDefault().Terminal));
@@ -968,7 +994,7 @@ namespace Ticketing.WebApi.Controllers
         {
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
-
+            var gateinfo = await services.GateInformation(gateid);
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
             bodyString += $"[C]{header.Address1}\n";
@@ -978,11 +1004,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetTenderDeclaration(id);
             bodyString += $"[C]================================\n";
             bodyString += $"[C]<b>TENDER DECLARATION</b>\n";
@@ -1020,6 +1043,7 @@ namespace Ticketing.WebApi.Controllers
         {
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
+            var gateinfo = await services.GateInformation(gateid);
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
             bodyString += $"[C]{header.Address1}\n";
@@ -1029,11 +1053,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetChangeFund(id);
             bodyString += $"[C]================================\n";
             bodyString += $"[C]<b>USER LOG IN</b>\n";
@@ -1158,6 +1179,7 @@ namespace Ticketing.WebApi.Controllers
         public async Task<IHttpActionResult> ReprintXReading(int gateid, string srno)
         {
             var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
             var item = new ReadingResponse();
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
@@ -1168,11 +1190,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetXReadingAsync(srno);
             bodyString += $"[C]<b>X READING</b>\n";
             var reprint = await services.GetReprintCount(srno, ReprintType.XReading);
@@ -1232,7 +1251,7 @@ namespace Ticketing.WebApi.Controllers
         {
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
-
+            var gateinfo = await services.GateInformation(gateid);
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
             bodyString += $"[C]{header.Address1}\n";
@@ -1242,11 +1261,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetYReadingAsync(srno);
             bodyString += $"[C]<b>Y READING</b>\n";
             var reprint = await services.GetReprintCount(srno, ReprintType.YReading);
@@ -1320,7 +1336,7 @@ namespace Ticketing.WebApi.Controllers
         {
             var header = await services.GetReportHeaderAsync(gateid);
             var item = new ReadingResponse();
-
+            var gateinfo = await services.GateInformation(gateid);
             var bodyString = string.Empty;
             bodyString += $"[C]{header.Company}\n";
             bodyString += $"[C]{header.Address1}\n";
@@ -1330,11 +1346,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[C]{header.TIN} :\n";
             bodyString += $"[C]ACCREDITATION NO :\n";
             bodyString += $"[C]{header.AccreditationNo}\n";
-            //bodyString += $"[C]VALID UNTIL :{header.AccreditationValidUntil} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.AccreditationDate} \n";
-            //bodyString += $"[C]PTU NO :\n";
-            //bodyString += $"[C]{header.PTUNo} \n";
-            //bodyString += $"[C]DATE ISSUED :{header.PTUDateIssued} \n\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n";
             var body = await services.GetZReadingAsync(srno, userid);
             bodyString += $"[C]<b>Z READING</b>\n";
             var reprint = await services.GetReprintCount(srno, ReprintType.ZReading);
