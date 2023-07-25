@@ -74,24 +74,25 @@ namespace Ticketing.WebApi.Services
             }
             return items;
         }
-        public async Task<string> ComputeTransaction(int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid, int discountid = 0, string discountamount = "", int cashlesstype = 0, string cashlessreference = "")
+        public async Task<string> ComputeTransaction(ORItem item)
         {
             var sql = "[dbo].[spComputeTransaction]";
             var cmd = new SqlCommand();
             cmd.CommandText = sql;
             cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@Id", transitid);
+            cmd.Parameters.AddWithValue("@Id", item.TransitId);
             cmd.Parameters.AddWithValue("@TimeOut", DateTime.Now);
-            cmd.Parameters.AddWithValue("@PaymentGate", gate);
-            cmd.Parameters.AddWithValue("@ParkerTypeId", parkertype);
-            cmd.Parameters.AddWithValue("@TenderedAmount", tenderamount);
-            cmd.Parameters.AddWithValue("@TotalAmount", totalamount);
-            cmd.Parameters.AddWithValue("@Change", change);
-            cmd.Parameters.AddWithValue("@UserId", userid);
-            cmd.Parameters.AddWithValue("@DiscountType", discountid);
-            cmd.Parameters.AddWithValue("@DiscountAmount", discountamount);
-            cmd.Parameters.AddWithValue("@TransactionType", cashlesstype);
-            cmd.Parameters.AddWithValue("@Reference", cashlessreference);
+            cmd.Parameters.AddWithValue("@PaymentGate", item.Gate);
+            cmd.Parameters.AddWithValue("@ParkerTypeId", item.ParkerType);
+            cmd.Parameters.AddWithValue("@TenderedAmount", item.TenderAmount);
+            cmd.Parameters.AddWithValue("@TotalAmount", item.TotalAmount);
+            cmd.Parameters.AddWithValue("@Change", item.Change);
+            cmd.Parameters.AddWithValue("@UserId", item.UserId);
+            cmd.Parameters.AddWithValue("@DiscountType", item.DiscountId);
+            cmd.Parameters.AddWithValue("@DiscountAmount", item.DiscountAmount);
+            cmd.Parameters.AddWithValue("@TransactionType", item.CashlessType);
+            cmd.Parameters.AddWithValue("@Reference", item.CashlessReference);
+            cmd.Parameters.AddWithValue("@Vat", item.VatAmount);
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }
@@ -641,7 +642,7 @@ namespace Ticketing.WebApi.Services
                     {
                         Id = int.Parse(dr["Id"].ToString()),
                         Type = int.Parse(dr["Type"].ToString()),
-                        Amount = int.Parse(dr["Amount"].ToString()),
+                        Amount = decimal.Parse(dr["Amount"].ToString()),
                         Name = dr["Name"].ToString()
                     };
                     items.Add(item);

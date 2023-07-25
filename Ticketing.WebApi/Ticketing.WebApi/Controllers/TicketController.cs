@@ -6,6 +6,7 @@ using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using Ticketing.WebApi.Helpers;
 using Ticketing.WebApi.Models;
 using Ticketing.WebApi.Services;
@@ -155,31 +156,33 @@ namespace Ticketing.WebApi.Controllers
             return $"{total} hour/s and {remaining} minute/s.";
         }
 
-        [HttpGet]
-        [Route("api/ticket/computetransaction")]
-        public async Task<IHttpActionResult> ComputeTransaction(int transitid,string gate,string parkertype,string tenderamount,string change,string totalamount,string userid, int discountid = 0, string discountamount ="", int cashlesstype = 0, string cashlessreference = "")
-        {
-            var result = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
-            if(result.Contains("success"))
-            {
-                return Ok(Constants.Success);
-            }
-            else
-            {
-                return Ok(Constants.Failed);
-            }
-        }
-        [HttpGet]
+        //[HttpGet]
+        //[Route("api/ticket/computetransaction")]
+        //public async Task<IHttpActionResult> ComputeTransaction(int transitid,string gate,string parkertype,string tenderamount,string change,string totalamount,string userid, int discountid = 0, string discountamount ="", int cashlesstype = 0, string cashlessreference = "")
+        //{
+        //    var result = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid);
+        //    if(result.Contains("success"))
+        //    {
+        //        return Ok(Constants.Success);
+        //    }
+        //    else
+        //    {
+        //        return Ok(Constants.Failed);
+        //    }
+        //}
+
+        [AllowCrossSiteJson]
+        [HttpPost]
         [Route("api/ticket/officialreceipt")]
-        public async Task<IHttpActionResult> GetOfficialReceiptInfo(string ticketno, int transitid, string gate, string parkertype, string tenderamount, string change, string totalamount, string userid, int discountid = 0, string discountamount = "", int cashlesstype = 0, string cashlessreference = "")
+        public async Task<IHttpActionResult> GetOfficialReceiptInfo([FromBody] ORItem data)
         {
             List<string> toExport = new List<string>();
-            var compute = await services.ComputeTransaction(transitid, gate, parkertype, tenderamount, change, totalamount, userid,discountid,discountamount,cashlesstype,cashlessreference);
+            var compute = await services.ComputeTransaction(data);
             if (compute.Contains("success"))
             {
-                var result = await services.GetOfficialReceipt(transitid);
+                var result = await services.GetOfficialReceipt(data.TransitId);
 
-                var gateid = await services.GetGatePerTransit(transitid);
+                var gateid = await services.GetGatePerTransit(data.TransitId);
                 var gateinfo = await services.GateInformation(gateid);
 
                 var orinfo = string.Empty;

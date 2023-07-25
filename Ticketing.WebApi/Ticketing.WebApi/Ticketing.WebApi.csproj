@@ -164,6 +164,7 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\AllowCrossSiteJsonAttribute.cs" />
     <Compile Include="Helpers\Calculator.cs" />
     <Compile Include="Helpers\StringGenerator.cs" />
     <Compile Include="Helpers\Constants.cs" />
@@ -183,6 +184,7 @@
     <Compile Include="Models\CalculatedRate.cs" />
     <Compile Include="Models\DiscountType.cs" />
     <Compile Include="Models\GateInformation.cs" />
+    <Compile Include="Models\ORItem.cs" />
     <Compile Include="Models\ReadingItem.cs" />
     <Compile Include="Models\ReadingResult.cs" />
     <Compile Include="Models\ReprintType.cs" />
