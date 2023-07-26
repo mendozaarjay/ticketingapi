@@ -62,7 +62,6 @@ namespace Ticketing.WebApi.Controllers
             ticketInfo += $"[C]MIN : {gateinfo.MIN}\n";
             ticketInfo += $"[C]S/N : {gateinfo.SN}\n";
             ticketInfo += $"[C]================================\n";
-            ticketInfo += $"[L]TIN      : {ticket.TIN}\n";
             ticketInfo += $"[L]PLATENO  : {ticket.PlateNo}\n";
             ticketInfo += $"[L]TICKETNO : {ticket.TicketNo}\n";
             ticketInfo += $"[L]LOCATION : {ticket.Location}\n";
@@ -213,6 +212,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[L]DURATION : {result.Duration}\n";
                 orinfo += $"[C]================================\n";
                 orinfo += $"[L]AMOUNT DUE       :P {result.TotalAmountDue}\n";
+                orinfo += $"[L]DISCOUNT         :P {result.Discount}\n";
                 orinfo += $"[L]AMOUNT TENDERED  :P {result.AmountTendered}\n";
                 orinfo += $"[L]CHANGE           :P {result.Change}\n";
                 orinfo += $"[C]================================\n";
@@ -278,6 +278,7 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatLabelWithStringValue("DURATION", result.Duration));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMOUNT DUE", result.TotalAmountDue));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("DISCOUNT", result.Discount));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMOUNT TENDERED", result.AmountTendered));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("CHANGE", result.Change));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
@@ -364,6 +365,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[L]DURATION : {result.Duration}\n";
             orinfo += $"[C]================================\n";
             orinfo += $"[L]AMOUNT DUE       :P {result.TotalAmountDue}\n";
+            orinfo += $"[L]DISCOUNT         :P {result.Discount}\n";
             orinfo += $"[L]AMOUNT TENDERED  :P {result.AmountTendered}\n";
             orinfo += $"[L]CHANGE           :P {result.Change}\n";
             orinfo += $"[C]================================\n";
@@ -1133,7 +1135,6 @@ namespace Ticketing.WebApi.Controllers
             ticketInfo += $"[C]================================\n";
             ticketInfo += $"[C]REPRINT COUNT: {reprintCount}\n";
             ticketInfo += $"[C]================================\n";
-            ticketInfo += $"[L]TIN      : {ticket.TIN}\n";
             ticketInfo += $"[L]PLATENO  : {ticket.PlateNo}\n";
             ticketInfo += $"[L]TICKETNO : {ticket.TicketNo}\n";
             ticketInfo += $"[L]LOCATION : {ticket.Location}\n";
