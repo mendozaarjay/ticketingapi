@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
@@ -17,12 +18,14 @@ namespace Ticketing.WebApi.Controllers
     {
         public string UserConnectionString { get; }
         private DataServices services = new DataServices();
+        private DapperServices dapperServices = new DapperServices();
         public TicketController()
         {
             UserConnectionString = ConfigurationManager.ConnectionStrings["UserConnnectionString"].ConnectionString;
             var useEncryption = ConfigurationManager.AppSettings["UseEncryption"].ToString();
             services.UseEncryption = useEncryption.Equals("1");
             services.UserConnection = UserConnectionString;
+            dapperServices.ConnectionString = UserConnectionString;
         }
 
         [HttpGet]
@@ -225,11 +228,11 @@ namespace Ticketing.WebApi.Controllers
                 //orinfo += $"[L]DISCOUNT      :P {result.Discount}\n";
                 orinfo += $"[C]================================\n";
                 orinfo += $"[L]PARKER INFORMATION\n";
-                orinfo += $"[L]NAME : _____________________\n";
-                orinfo += $"[L]ADDRESS : __________________\n";
-                orinfo += $"[L]TIN: _______________________\n";
-                orinfo += $"[L]SC/PWD ID: _________________\n";
-                orinfo += $"[L]SIGNATURE: _________________\n\n";
+                orinfo += $"[L]NAME : {result.CustomerName}\n";
+                orinfo += $"[L]ADDRESS : {result.CustomerAddress}\n";
+                orinfo += $"[L]TIN: {result.CustomerTin}\n";
+                orinfo += $"[L]SC/PWD ID: {result.CustomerId}\n";
+                orinfo += $"[L]SIGNATURE: \n\n";
                 orinfo += $"[C]================================\n";
                 orinfo += $"[C]SMARTBAS (PHILS.) CORP.\n";
                 orinfo += $"[C]Unit 3106, East Tower, Phil.\n";
@@ -289,11 +292,11 @@ namespace Ticketing.WebApi.Controllers
 
                     toExport.Add(StringGenerator.AddNewLineSeparator());
                     toExport.Add("PARKER INFORMATION");
-                    toExport.Add(StringGenerator.FormatLabel("NAME"));
-                    toExport.Add(StringGenerator.FormatLabel("ADDRESS"));
-                    toExport.Add(StringGenerator.FormatLabel("TIN"));
-                    toExport.Add(StringGenerator.FormatLabel("SC/PWD ID"));
-                    toExport.Add(StringGenerator.FormatLabel("SIGNATURE"));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("NAME", result.CustomerName));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("ADDRESS", result.CustomerAddress));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("TIN", result.CustomerTin));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("SC/PWD ID", result.CustomerId));
+                    toExport.Add(StringGenerator.FormatLabelWithStringValue("SIGNATURE", ""));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
                     toExport.Add(StringGenerator.FormatCenterString("SMARTBAS (PHILS.) CORP.\n"));
                     toExport.Add(StringGenerator.FormatCenterString("Unit 3106, East Tower, Phil."));
@@ -349,6 +352,7 @@ namespace Ticketing.WebApi.Controllers
             if(reprint > 0)
             {
                 orinfo += $"[C]<b>REPRINT : {reprint}</b>\n\n";
+                orinfo += $"[C]<b>DATE/TIME : {DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss tt")}</b>\n\n";
             }
             if (decimal.Parse(result.Discount) > 0)
             {
@@ -377,11 +381,12 @@ namespace Ticketing.WebApi.Controllers
             //orinfo += $"[L]DISCOUNT      :P {result.Discount}\n";
             orinfo += $"[C]================================\n";
             orinfo += $"[L]PARKER INFORMATION\n";
-            orinfo += $"[L]NAME : _____________________\n";
-            orinfo += $"[L]ADDRESS : __________________\n";
-            orinfo += $"[L]TIN: _______________________\n";
-            orinfo += $"[L]SC/PWD ID: _________________\n";
-            orinfo += $"[L]SIGNATURE: _________________\n\n";
+            orinfo += $"[L]PARKER INFORMATION\n";
+            orinfo += $"[L]NAME : {result.CustomerName}\n";
+            orinfo += $"[L]ADDRESS : {result.CustomerAddress}\n";
+            orinfo += $"[L]TIN: {result.CustomerTin}\n";
+            orinfo += $"[L]SC/PWD ID: {result.CustomerId}\n";
+            orinfo += $"[L]SIGNATURE: \n\n";
             orinfo += $"[C]================================\n";
             orinfo += $"[C]SMARTBAS (PHILS.) CORP.\n";
             orinfo += $"[C]Unit 3106, East Tower, Phil.\n";
@@ -431,13 +436,7 @@ namespace Ticketing.WebApi.Controllers
             var result = await services.SignOut(userid, gateid);
             return Ok(result);
         }
-        [HttpGet]
-        [Route("api/ticket/xreading")]
-        public async Task<IHttpActionResult> XReading(int gateid)
-        {
-            var result = await services.PerformXReading(gateid);
-            return Ok(result);
-        }
+
         [HttpGet]
         [Route("api/ticket/forxreading")]
         public async Task<IHttpActionResult> GetForXReading(int gateid)
@@ -481,7 +480,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]TIME OUT :{body.FirstOrDefault().TimeOut.ToUpper()}\n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]TYPE       IN    OUT   REMAINING\n";
-            bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] \n";     
+            bodyString += $"[L]PARKER     [L]{body.FirstOrDefault().ParkerIn}  [L]{body.FirstOrDefault().ParkerOut} [R] \n";
             bodyString += $"[L]RESERVED   [L]{body.FirstOrDefault().ReservedIn}  [L]{body.FirstOrDefault().ReservedOut} [R] \n";
             bodyString += $"[C]================================\n";
             bodyString += $"[L]SALES COUNTER\n";
@@ -505,7 +504,7 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"TYPE        COUNT     AMOUNT\n";
             bodyString += $"[C]================================\n";
             var cashless = await services.GetCashlessForXReading(srno);
-            foreach(var bodyItem in cashless)
+            foreach (var bodyItem in cashless)
             {
                 bodyString += $"[L]{bodyItem.RateType} [C]{bodyItem.Count}   [R]{bodyItem.Amount}\n";
             }
@@ -565,9 +564,9 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatLabelWithThreeColumns(bodyItem.RateType, bodyItem.Count, decimal.Parse(bodyItem.Amount).ToString("N2")));
                 }
                 toExport.Add(StringGenerator.AddNewLineSeparator());
-                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TRANSACTION", body.FirstOrDefault().TotalTransaction,true));
-                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL PARTIAL", body.FirstOrDefault().TotalPartial,true));
-                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TENDERED", body.FirstOrDefault().TotalTendered,true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TRANSACTION", body.FirstOrDefault().TotalTransaction, true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL PARTIAL", body.FirstOrDefault().TotalPartial, true));
+                toExport.Add(StringGenerator.FormatLabelWithStringValue("TOTAL TENDERED", body.FirstOrDefault().TotalTendered, true));
                 toExport.Add(StringGenerator.FormatLabelWithStringValue("VARIANCE ", body.FirstOrDefault().TotalVariance, true));
                 toExport.Add(StringGenerator.AddNewLineSeparator());
                 StringGenerator.GenerateJournal(JournalType.XReading, toExport, srno);
@@ -576,6 +575,7 @@ namespace Ticketing.WebApi.Controllers
             {
 
             }
+
             return Ok(item);
         }
         [HttpGet]
@@ -1452,6 +1452,470 @@ namespace Ticketing.WebApi.Controllers
             return Json(result, serializerSettings);
         }
         #endregion
+
+        [HttpGet]
+        [Route("api/report/xreadingreport")]
+        public async Task<IHttpActionResult> GetXReadingReport(int gateid, string srno)
+        {
+            var toExport = new List<string>();
+            var item = new ReadingResponse();
+            var bodyString = string.Empty;
+            var header =  await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
+            var reading = await dapperServices.GetXReadingDetails(srno);
+            bodyString += $"[C]{header.Company}\n";
+            bodyString += $"[C]{header.Address1}\n";
+            bodyString += $"[C]{header.Address2}\n";
+            bodyString += $"[C]{header.Address3}\n";
+            bodyString += $"[C]VAT REG TIN :\n";
+            bodyString += $"[C]{header.TIN} :\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n\n";
+   
+            bodyString += $"[C]<b>X-READING REPORT</b>\n\n";
+            bodyString += $"[L]Report Date: [R]{reading.ReportDate}\n";
+            bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
+            bodyString += $"[L]Start Date & Time : [R]{reading.StartDate}\n";
+            bodyString += $"[L]End Date & Time : [R]{reading.EndDate}\n";
+            bodyString += $"[L]Cashier : [R]{reading.Cashier}\n";
+            bodyString += $"[L]Beg. OR # :  [R]{reading.BeginningOR}\n";
+            bodyString += $"[L]End. OR # :  [R]{reading.EndingOR}\n";
+            bodyString += $"[L]Opening Fund : [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]PAYMENT RECEIVED \n";
+            bodyString += $"[L]CASH [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CASHLESS [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequePayment}\n";
+            bodyString += $"[L]CREDIT CARD[R]{reading.CreditCardPayment}\n";
+            bodyString += $"[L]Total Payments :[R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]VOID [R]{reading.Void}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]REFUND [R]{reading.Refund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]WITHDRAWAL [R]{reading.Withdrawal}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]TRANSACTION SUMMARY \n";
+            bodyString += $"[L]Cash in Drawer [R]{reading.CashSummary}\n";
+            bodyString += $"[L]Cashless [R]{reading.CashlessSummary}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequeSummary}\n";
+            bodyString += $"[L]CREDIT CARD [R]{reading.CreditCardSummary}\n";
+            bodyString += $"[L]Opening Fund [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]Less Withdrawal [R]{reading.LessWithdrawal}\n";
+            bodyString += $"[L]Payment Received [R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            if (reading.ShortOver < 0)
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(-)\n";
+            }
+            else
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(+)\n";
+            }
+            bodyString += $"[L]================================\n";
+            item.Body = bodyString;
+            toExport.Add(bodyString);
+            StringGenerator.GenerateJournal(JournalType.XReading, toExport, srno);
+            return Ok(item);
+        }
+
+        [HttpGet]
+        [Route("api/report/xreadingreportreprint")]
+        public async Task<IHttpActionResult> GetXReadingReportReprint(int gateid, string srno)
+        {
+            var item = new ReadingResponse();
+            var bodyString = string.Empty;
+            var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
+            var reading = await dapperServices.GetXReadingDetails(srno);
+            var reprint = await services.GetReprintCount(srno, ReprintType.XReading);
+
+            bodyString += $"[C]{header.Company}\n";
+            bodyString += $"[C]{header.Address1}\n";
+            bodyString += $"[C]{header.Address2}\n";
+            bodyString += $"[C]{header.Address3}\n";
+            bodyString += $"[C]VAT REG TIN :\n";
+            bodyString += $"[C]{header.TIN} :\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n\n";
+
+            bodyString += $"[C]<b>X-READING REPORT</b>\n";
+            if (reprint > 0)
+            {
+                bodyString += $"[C]REPRINT : {reprint}\n";
+                bodyString += $"[C]DATE/TIME : {DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}\n\n";
+            }
+
+            bodyString += $"[L]Report Date: [R]{reading.ReportDate}\n";
+            bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
+            bodyString += $"[L]Start Date & Time : [R]{reading.StartDate}\n";
+            bodyString += $"[L]End Date & Time : [R]{reading.EndDate}\n";
+            bodyString += $"[L]Cashier : [R]{reading.Cashier}\n";
+            bodyString += $"[L]Beg. OR # :  [R]{reading.BeginningOR}\n";
+            bodyString += $"[L]End. OR # :  [R]{reading.EndingOR}\n";
+            bodyString += $"[L]Opening Fund : [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]PAYMENT RECEIVED \n";
+            bodyString += $"[L]CASH [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CASHLESS [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequePayment}\n";
+            bodyString += $"[L]CREDIT CARD[R]{reading.CreditCardPayment}\n";
+            bodyString += $"[L]Total Payments :[R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]VOID [R]{reading.Void}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]REFUND [R]{reading.Refund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]WITHDRAWAL [R]{reading.Withdrawal}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]TRANSACTION SUMMARY \n";
+            bodyString += $"[L]Cash in Drawer [R]{reading.CashSummary}\n";
+            bodyString += $"[L]Cashless [R]{reading.CashlessSummary}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequeSummary}\n";
+            bodyString += $"[L]CREDIT CARD [R]{reading.CreditCardSummary}\n";
+            bodyString += $"[L]Opening Fund [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]Less Withdrawal [R]{reading.LessWithdrawal}\n";
+            bodyString += $"[L]Payment Received [R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            if (reading.ShortOver < 0)
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(-)\n";
+            }
+            else
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(+)\n";
+            }
+            bodyString += $"[L]================================\n";
+            item.Body = bodyString;
+
+            return Ok(item);
+        }
+
+
+        [HttpGet]
+        [Route("api/report/yreadingreport")]
+        public async Task<IHttpActionResult> GetYReadingReport(int gateid, string srno)
+        {
+            var toExport = new List<string>();
+            var item = new ReadingResponse();
+            var bodyString = string.Empty;
+            var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
+            var reading = await dapperServices.GetYReadingDetails(srno);
+            bodyString += $"[C]{header.Company}\n";
+            bodyString += $"[C]{header.Address1}\n";
+            bodyString += $"[C]{header.Address2}\n";
+            bodyString += $"[C]{header.Address3}\n";
+            bodyString += $"[C]VAT REG TIN :\n";
+            bodyString += $"[C]{header.TIN} :\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n\n";
+
+            bodyString += $"[C]<b>Y-READING REPORT</b>\n\n";
+            bodyString += $"[L]Report Date: [R]{reading.ReportDate}\n";
+            bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
+            bodyString += $"[L]Start Date & Time : [R]{reading.StartDate}\n";
+            bodyString += $"[L]End Date & Time : [R]{reading.EndDate}\n";
+            bodyString += $"[L]Beg. OR # :  [R]{reading.BeginningOR}\n";
+            bodyString += $"[L]End. OR # :  [R]{reading.EndingOR}\n";
+            bodyString += $"[L]Opening Fund : [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]PAYMENT RECEIVED \n";
+            bodyString += $"[L]CASH [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CASHLESS [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequePayment}\n";
+            bodyString += $"[L]CREDIT CARD[R]{reading.CreditCardPayment}\n";
+            bodyString += $"[L]Total Payments :[R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]VOID [R]{reading.Void}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]REFUND [R]{reading.Refund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]WITHDRAWAL [R]{reading.Withdrawal}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]TRANSACTION SUMMARY \n";
+            bodyString += $"[L]Cash in Drawer [R]{reading.CashSummary}\n";
+            bodyString += $"[L]Cashless [R]{reading.CashlessSummary}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequeSummary}\n";
+            bodyString += $"[L]CREDIT CARD [R]{reading.CreditCardSummary}\n";
+            bodyString += $"[L]Opening Fund [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]Less Withdrawal [R]{reading.LessWithdrawal}\n";
+            bodyString += $"[L]Payment Received [R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            if (reading.ShortOver < 0)
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(-)\n";
+            }
+            else
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(+)\n";
+            }
+            bodyString += $"[L]================================\n";
+            item.Body = bodyString;
+            toExport.Add(bodyString);
+            StringGenerator.GenerateJournal(JournalType.YReading, toExport, srno);
+            return Ok(item);
+        }
+
+        [HttpGet]
+        [Route("api/report/yreadingreportreprint")]
+        public async Task<IHttpActionResult> GetYReadingReportReprint(int gateid, string srno)
+        {
+            var item = new ReadingResponse();
+            var bodyString = string.Empty;
+            var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
+            var reading = await dapperServices.GetYReadingDetails(srno);
+            var reprint = await services.GetReprintCount(srno, ReprintType.YReading);
+
+            bodyString += $"[C]{header.Company}\n";
+            bodyString += $"[C]{header.Address1}\n";
+            bodyString += $"[C]{header.Address2}\n";
+            bodyString += $"[C]{header.Address3}\n";
+            bodyString += $"[C]VAT REG TIN :\n";
+            bodyString += $"[C]{header.TIN} :\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n\n";
+
+            bodyString += $"[C]<b>Y-READING REPORT</b>\n";
+            if (reprint > 0)
+            {
+                bodyString += $"[C]REPRINT : {reprint}\n";
+                bodyString += $"[C]DATE/TIME : {DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}\n\n";
+            }
+
+            bodyString += $"[L]Report Date: [R]{reading.ReportDate}\n";
+            bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
+            bodyString += $"[L]Start Date & Time : [R]{reading.StartDate}\n";
+            bodyString += $"[L]End Date & Time : [R]{reading.EndDate}\n";
+            bodyString += $"[L]Beg. OR # :  [R]{reading.BeginningOR}\n";
+            bodyString += $"[L]End. OR # :  [R]{reading.EndingOR}\n";
+            bodyString += $"[L]Opening Fund : [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]PAYMENT RECEIVED \n";
+            bodyString += $"[L]CASH [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CASHLESS [R]{reading.CashlessPayment}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequePayment}\n";
+            bodyString += $"[L]CREDIT CARD[R]{reading.CreditCardPayment}\n";
+            bodyString += $"[L]Total Payments :[R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]VOID [R]{reading.Void}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]REFUND [R]{reading.Refund}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]WITHDRAWAL [R]{reading.Withdrawal}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]TRANSACTION SUMMARY \n";
+            bodyString += $"[L]Cash in Drawer [R]{reading.CashSummary}\n";
+            bodyString += $"[L]Cashless [R]{reading.CashlessSummary}\n";
+            bodyString += $"[L]CHEQUE [R]{reading.ChequeSummary}\n";
+            bodyString += $"[L]CREDIT CARD [R]{reading.CreditCardSummary}\n";
+            bodyString += $"[L]Opening Fund [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]Less Withdrawal [R]{reading.LessWithdrawal}\n";
+            bodyString += $"[L]Payment Received [R]{reading.PaymentReceivedSummary}\n";
+            bodyString += $"[L]================================\n";
+            if (reading.ShortOver < 0)
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(-)\n";
+            }
+            else
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(+)\n";
+            }
+            bodyString += $"[L]================================\n";
+            item.Body = bodyString;
+
+            return Ok(item);
+        }
+
+        [HttpGet]
+        [Route("api/report/zreadingreport")]
+        public async Task<IHttpActionResult> GetZReadingReport(int gateid, string srno, int userid)
+        {
+            var toExport = new List<string>();
+            var item = new ReadingResponse();
+            var bodyString = string.Empty;
+            var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
+            var reading = await dapperServices.GetZReadingDetails(srno);
+            bodyString += $"[C]{header.Company}\n";
+            bodyString += $"[C]{header.Address1}\n";
+            bodyString += $"[C]{header.Address2}\n";
+            bodyString += $"[C]{header.Address3}\n";
+            bodyString += $"[C]VAT REG TIN :\n";
+            bodyString += $"[C]{header.TIN} :\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n\n";
+            bodyString += "[C]<b>Z-READING REPORT</b>\n\n";
+            bodyString += $"[L]Report Date: [R]{reading.ReportDate}\n";
+            bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
+            bodyString += $"[L]Start Date & Time: [R]{reading.StartDate}\n";
+            bodyString += $"[L]End Date & Time: [R]{reading.EndDate}\n";
+            bodyString += $"[L]Beg. SI #: [R]{reading.BeginningSINo}\n";
+            bodyString += $"[L]End. SI # [R]{reading.EndingSINo}\n";
+            bodyString += $"[L]Beg. Void #: [R]{reading.BeginningVoidNo}\n";
+            bodyString += $"[L]End. Void # [R]{reading.EndingVoidNo}\n";
+            bodyString += $"[L]Beg. Return #: [R]{reading.BeginningReturnNo}\n";
+            bodyString += $"[L]End. Return #: [R]{reading.EndingReturnNo}\n";
+            bodyString += $"[L]Reset Counter No.: [R]{reading.ResetCount}\n";
+            bodyString += $"[L]Z Counter No.: [R]{reading.ZCount}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]Present Accumulated Sales: [R]{reading.PresentAccumulatedSales}\n";
+            bodyString += $"[L]Previous Accumulated Sales: [R]{reading.PreviousAccumulatedSales}\n";
+            bodyString += $"[L]Sales for the Day: [R]{reading.TodaySales}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]BREAKDOWN OF SALES";
+            bodyString += $"[L]VATABLE SALES: [R]{reading.VatableSales}\n";
+            bodyString += $"[L]VAT AMOUNT: [R]{reading.VatAmount}\n";
+            bodyString += $"[L]VAT EXEMPT SALES: [R]{reading.VatExemptSales}\n";
+            bodyString += $"[L]ZERO RATED SALES: [R]{reading.ZeroRatedSales}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]Gross Amount: [R]{reading.GrossAmount}\n";
+            bodyString += $"[L]Less Discount: [R]{reading.LessDiscount}\n";
+            bodyString += $"[L]Less Return [R]{reading.LessReturn}\n";
+            bodyString += $"[L]Less Void [R]{reading.LessVoid}\n";
+            bodyString += $"[L]Less VAT Adjustment: [R]{reading.LessVatAdjustment}\n";
+            bodyString += $"[L]Net Amount: [R]{reading.NetAmount}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]DISCOUNT SUMMARY";
+            bodyString += $"[L]SC Disc.: [R]{reading.SCDiscount}\n";
+            bodyString += $"[L]PWD Disc.: [R]{reading.PWDDiscount}\n";
+            bodyString += $"[L]NAAC Disc.: [R]{reading.NAACDiscount}\n";
+            bodyString += $"[L]Solo Parent Disc.: [R]{reading.SoloDiscount}\n";
+            bodyString += $"[L]Other Disc.: [R]{reading.OtherDiscount}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]SALES ADJUSTMENT";
+            bodyString += $"[L]VOID: [R]{reading.VoidAdjustment}\n";
+            bodyString += $"[L]RETURN: [R]{reading.ReturnAdjustment}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]VAT ADJUSTMENT";
+            bodyString += $"[L]SC TRANS.: [R]{reading.SCVatAdjustment}\n";
+            bodyString += $"[L]PWD TRANS.: [R]{reading.PWDVatAdjustment}\n";
+            bodyString += $"[L]REG. Disc. TRANS.: [R]{reading.RegularDiscountVatAdjustment}\n";
+            bodyString += $"[L]VAT on Return: [R]{reading.VatOnReturnVatAdjustment}\n";
+            bodyString += $"[L]Other VAT Adjustments: [R]{reading.OtherVatAdjustment}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]TRANSACTION SUMMARY";
+            bodyString += $"[L]Cash In Drawer: [R]{reading.CashInDrawer}\n";
+            bodyString += $"[L]Cashless: [R]{reading.Cashless}\n";
+            bodyString += $"[L]CHEQUE: [R]{reading.Cheque}\n";
+            bodyString += $"[L]CREDIT CARD: [R]{reading.CreditCard}\n";
+            bodyString += $"[L]GIFT CERTIFICATE: [R]{reading.GiftCertificate}\n";
+            bodyString += $"[L]Opening Fund: [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]Less Withdrawal: [R]{reading.LessWithdrawal}\n";
+            bodyString += $"[L]Payments Received: [R]{reading.PaymentReceived}\n";
+            bodyString += $"[L]================================\n";
+            if (reading.ShortOver < 0)
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(-)\n";
+            }
+            else
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(+)\n";
+            }
+            bodyString += $"[L]================================\n";
+            toExport.Add(bodyString);
+            item.Body = bodyString;
+            StringGenerator.GenerateJournal(JournalType.ZReading, toExport, srno);
+            return Ok(item);
+        }
+
+        [HttpGet]
+        [Route("api/report/zreadingreportreprint")]
+        public async Task<IHttpActionResult> GetZReadingReportReprint(int gateid, string srno, int userid)
+        {
+            var item = new ReadingResponse();
+            var bodyString = string.Empty;
+            var header = await services.GetReportHeaderAsync(gateid);
+            var gateinfo = await services.GateInformation(gateid);
+            var reading = await dapperServices.GetZReadingDetails(srno);
+            var reprint = await services.GetReprintCount(srno, ReprintType.ZReading);
+            bodyString += $"[C]{header.Company}\n";
+            bodyString += $"[C]{header.Address1}\n";
+            bodyString += $"[C]{header.Address2}\n";
+            bodyString += $"[C]{header.Address3}\n";
+            bodyString += $"[C]VAT REG TIN :\n";
+            bodyString += $"[C]{header.TIN} :\n";
+            bodyString += $"[C]MIN : {gateinfo.MIN}\n";
+            bodyString += $"[C]S/N : {gateinfo.SN}\n\n";
+            bodyString += "[C]<b>Z-READING REPORT</b>\n\n";
+            if (reprint > 0)
+            {
+                bodyString += $"[C]REPRINT : {reprint}\n";
+                bodyString += $"[C]DATE/TIME : {DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")}\n\n";
+            }
+
+            bodyString += $"[L]Report Date: [R]{reading.ReportDate}\n";
+            bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
+            bodyString += $"[L]Start Date & Time: [R]{reading.StartDate}\n";
+            bodyString += $"[L]End Date & Time: [R]{reading.EndDate}\n";
+            bodyString += $"[L]Beg. SI #: [R]{reading.BeginningSINo}\n";
+            bodyString += $"[L]End. SI # [R]{reading.EndingSINo}\n";
+            bodyString += $"[L]Beg. Void #: [R]{reading.BeginningVoidNo}\n";
+            bodyString += $"[L]End. Void # [R]{reading.EndingVoidNo}\n";
+            bodyString += $"[L]Beg. Return #: [R]{reading.BeginningReturnNo}\n";
+            bodyString += $"[L]End. Return #: [R]{reading.EndingReturnNo}\n";
+            bodyString += $"[L]Reset Counter No.: [R]{reading.ResetCount}\n";
+            bodyString += $"[L]Z Counter No.: [R]{reading.ZCount}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]Present Accumulated Sales: [R]{reading.PresentAccumulatedSales}\n";
+            bodyString += $"[L]Previous Accumulated Sales: [R]{reading.PreviousAccumulatedSales}\n";
+            bodyString += $"[L]Sales for the Day: [R]{reading.TodaySales}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]BREAKDOWN OF SALES";
+            bodyString += $"[L]VATABLE SALES: [R]{reading.VatableSales}\n";
+            bodyString += $"[L]VAT AMOUNT: [R]{reading.VatAmount}\n";
+            bodyString += $"[L]VAT EXEMPT SALES: [R]{reading.VatExemptSales}\n";
+            bodyString += $"[L]ZERO RATED SALES: [R]{reading.ZeroRatedSales}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[L]Gross Amount: [R]{reading.GrossAmount}\n";
+            bodyString += $"[L]Less Discount: [R]{reading.LessDiscount}\n";
+            bodyString += $"[L]Less Return [R]{reading.LessReturn}\n";
+            bodyString += $"[L]Less Void [R]{reading.LessVoid}\n";
+            bodyString += $"[L]Less VAT Adjustment: [R]{reading.LessVatAdjustment}\n";
+            bodyString += $"[L]Net Amount: [R]{reading.NetAmount}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]DISCOUNT SUMMARY";
+            bodyString += $"[L]SC Disc.: [R]{reading.SCDiscount}\n";
+            bodyString += $"[L]PWD Disc.: [R]{reading.PWDDiscount}\n";
+            bodyString += $"[L]NAAC Disc.: [R]{reading.NAACDiscount}\n";
+            bodyString += $"[L]Solo Parent Disc.: [R]{reading.SoloDiscount}\n";
+            bodyString += $"[L]Other Disc.: [R]{reading.OtherDiscount}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]SALES ADJUSTMENT";
+            bodyString += $"[L]VOID: [R]{reading.VoidAdjustment}\n";
+            bodyString += $"[L]RETURN: [R]{reading.ReturnAdjustment}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]VAT ADJUSTMENT";
+            bodyString += $"[L]SC TRANS.: [R]{reading.SCVatAdjustment}\n";
+            bodyString += $"[L]PWD TRANS.: [R]{reading.PWDVatAdjustment}\n";
+            bodyString += $"[L]REG. Disc. TRANS.: [R]{reading.RegularDiscountVatAdjustment}\n";
+            bodyString += $"[L]VAT on Return: [R]{reading.VatOnReturnVatAdjustment}\n";
+            bodyString += $"[L]Other VAT Adjustments: [R]{reading.OtherVatAdjustment}\n";
+            bodyString += $"[L]================================\n";
+            bodyString += $"[C]TRANSACTION SUMMARY";
+            bodyString += $"[L]Cash In Drawer: [R]{reading.CashInDrawer}\n";
+            bodyString += $"[L]Cashless: [R]{reading.Cashless}\n";
+            bodyString += $"[L]CHEQUE: [R]{reading.Cheque}\n";
+            bodyString += $"[L]CREDIT CARD: [R]{reading.CreditCard}\n";
+            bodyString += $"[L]GIFT CERTIFICATE: [R]{reading.GiftCertificate}\n";
+            bodyString += $"[L]Opening Fund: [R]{reading.OpeningFund}\n";
+            bodyString += $"[L]Less Withdrawal: [R]{reading.LessWithdrawal}\n";
+            bodyString += $"[L]Payments Received: [R]{reading.PaymentReceived}\n";
+            bodyString += $"[L]================================\n";
+            if (reading.ShortOver < 0)
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(-)\n";
+            }
+            else
+            {
+                bodyString += $"[L]SHORT/OVER [R]{reading.ShortOver}(+)\n";
+            }
+            bodyString += $"[L]================================\n";
+            item.Body = bodyString;
+
+            return Ok(item);
+        }
     }
 }
 

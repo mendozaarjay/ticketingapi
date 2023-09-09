@@ -45,6 +45,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Dapper, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Dapper.2.0.151\lib\net461\Dapper.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -206,6 +209,9 @@
     <Compile Include="Models\CashlessType.cs" />
     <Compile Include="Models\CashierSummary.cs" />
     <Compile Include="Models\UserAccessMatrix.cs" />
+    <Compile Include="Models\ZReadingReport.cs" />
+    <Compile Include="Models\YReadingReport.cs" />
+    <Compile Include="Models\XReadingReport.cs" />
     <Compile Include="Models\YReading.cs" />
     <Compile Include="Models\ChangeFund.cs" />
     <Compile Include="Models\XReadingItem.cs" />
@@ -215,6 +221,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers\SCObjects.cs" />
     <Compile Include="Security\Security.cs" />
+    <Compile Include="Services\DapperServices.cs" />
     <Compile Include="Services\DataServices.cs" />
   </ItemGroup>
   <ItemGroup>

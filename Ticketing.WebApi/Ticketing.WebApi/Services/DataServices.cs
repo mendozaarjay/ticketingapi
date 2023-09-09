@@ -93,6 +93,10 @@ namespace Ticketing.WebApi.Services
             cmd.Parameters.AddWithValue("@TransactionType", item.CashlessType);
             cmd.Parameters.AddWithValue("@Reference", item.CashlessReference);
             cmd.Parameters.AddWithValue("@Vat", item.VatAmount);
+            cmd.Parameters.AddWithValue("@CustomerName", item.CustomerName);
+            cmd.Parameters.AddWithValue("@CustomerAddress", item.CustomerAddress);
+            cmd.Parameters.AddWithValue("@CustomerTin", item.CustomerTin);
+            cmd.Parameters.AddWithValue("@CustomerId", item.CustomerId);
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }
@@ -202,6 +206,10 @@ namespace Ticketing.WebApi.Services
                     ZeroRated = result.Rows[0]["ZeroRated"].ToString(),
                     CashierName = result.Rows[0]["CashierName"].ToString(),
                     RateName = result.Rows[0]["RateName"].ToString(),
+                    CustomerName = result.Rows[0]["CustomerName"].ToString(),
+                    CustomerAddress = result.Rows[0]["CustomerAddress"].ToString(),
+                    CustomerTin = result.Rows[0]["CustomerTin"].ToString(),
+                    CustomerId = result.Rows[0]["CustomerId"].ToString(),
                 };
                 item = or;
             }

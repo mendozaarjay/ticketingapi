@@ -37,6 +37,10 @@
         public string ZeroRated { get; set; }
         public string Printable { get; set; }
         public string RateName { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerAddress { get; set; }
+        public string CustomerTin { get; set; }
+        public string CustomerId { get; set; }
 
 
     }
