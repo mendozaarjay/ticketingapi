@@ -13,8 +13,11 @@ public class ORItem
     public int CashlessType { get; set; }
     public string CashlessReference { get; set; }
     public decimal VatAmount { get; set; }
+    public decimal VatExempt { get; set; }
     public string CustomerName { get; set; }
     public string CustomerAddress { get; set; }
     public string CustomerTin { get; set; }
     public string CustomerId { get; set; }
+    public decimal Fee { get; set; }
+    public decimal VatableSales { get; set; }
 }

@@ -93,10 +93,13 @@ namespace Ticketing.WebApi.Services
             cmd.Parameters.AddWithValue("@TransactionType", item.CashlessType);
             cmd.Parameters.AddWithValue("@Reference", item.CashlessReference);
             cmd.Parameters.AddWithValue("@Vat", item.VatAmount);
+            cmd.Parameters.AddWithValue("@VatExempt", item.VatExempt);
             cmd.Parameters.AddWithValue("@CustomerName", item.CustomerName);
             cmd.Parameters.AddWithValue("@CustomerAddress", item.CustomerAddress);
             cmd.Parameters.AddWithValue("@CustomerTin", item.CustomerTin);
             cmd.Parameters.AddWithValue("@CustomerId", item.CustomerId);
+            cmd.Parameters.AddWithValue("@Fee", item.Fee);
+            cmd.Parameters.AddWithValue("@VatableSales", item.VatableSales);
             var result = await SCObjects.ExecNonQueryAsync(cmd, UserConnection);
             return result;
         }

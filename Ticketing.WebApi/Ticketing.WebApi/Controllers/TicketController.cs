@@ -219,7 +219,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[L]AMOUNT TENDERED  :P {result.AmountTendered}\n";
                 orinfo += $"[L]CHANGE           :P {result.Change}\n";
                 orinfo += $"[C]================================\n";
-                orinfo += $"[L]VATABLE SALES    :P {result.TotalWithVaT}\n";
+                orinfo += $"[L]VATABLE SALES    :P {result.VatableSales}\n";
                 orinfo += $"[L]VAT AMOUNT(12%)  :P {result.Vat}\n";
                 orinfo += $"[L]VAT-EXEMPT SALES :P {result.VatExempt}\n";
                 orinfo += $"[L]ZERO RATED SALES :P {result.ZeroRated}\n";
@@ -285,9 +285,9 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMOUNT TENDERED", result.AmountTendered));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("CHANGE", result.Change));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
-                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VATABLE SALES", result.TotalWithVaT));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VATABLE SALES", result.VatableSales));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT AMOUNT(12%)", result.Vat));
-                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT-EXEMPT SALES", result.AmountTendered));
+                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("VAT-EXEMPT SALES", result.VatExempt));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("ZERO RATED SALES", result.Change));
 
                     toExport.Add(StringGenerator.AddNewLineSeparator());
@@ -373,7 +373,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[L]AMOUNT TENDERED  :P {result.AmountTendered}\n";
             orinfo += $"[L]CHANGE           :P {result.Change}\n";
             orinfo += $"[C]================================\n";
-            orinfo += $"[L]VATABLE SALES    :P {result.TotalWithVaT}\n";
+            orinfo += $"[L]VATABLE SALES    :P {result.VatableSales}\n";
             orinfo += $"[L]VAT AMOUNT(12%)  :P {result.Vat}\n";
             orinfo += $"[L]VAT-EXEMPT SALES :P {result.VatExempt}\n";
             orinfo += $"[L]ZERO RATED SALES :P {result.ZeroRated}\n";
