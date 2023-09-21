@@ -349,7 +349,8 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]MIN : {gateinfo.MIN}\n";
             orinfo += $"[C]S/N : {gateinfo.SN}\n";
             orinfo += $"[C]<b>OFFICIAL RECEIPT</b>\n\n";
-            if(reprint > 0)
+            orinfo += $"[C]<b>{result.RateName}</b>\n\n";
+            if (reprint > 0)
             {
                 orinfo += $"[C]<b>REPRINT : {reprint}</b>\n\n";
                 orinfo += $"[C]<b>DATE/TIME : {DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss tt")}</b>\n\n";
@@ -380,7 +381,6 @@ namespace Ticketing.WebApi.Controllers
             //orinfo += $"[L]SUBTOTAL      :P {result.Subtotal}\n";
             //orinfo += $"[L]DISCOUNT      :P {result.Discount}\n";
             orinfo += $"[C]================================\n";
-            orinfo += $"[L]PARKER INFORMATION\n";
             orinfo += $"[L]PARKER INFORMATION\n";
             orinfo += $"[L]NAME : {result.CustomerName}\n";
             orinfo += $"[L]ADDRESS : {result.CustomerAddress}\n";
