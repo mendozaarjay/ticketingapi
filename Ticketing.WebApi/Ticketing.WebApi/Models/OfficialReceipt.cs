@@ -41,6 +41,7 @@
         public string CustomerAddress { get; set; }
         public string CustomerTin { get; set; }
         public string CustomerId { get; set; }
+        public decimal DiscountPercentage { get; set; }
 
 
     }

@@ -215,7 +215,14 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[L]DURATION : {result.Duration}\n";
                 orinfo += $"[C]================================\n";
                 orinfo += $"[L]AMOUNT DUE       :P {result.TotalAmountDue}\n";
-                orinfo += $"[L]DISCOUNT         :P {result.Discount}\n";
+                if(decimal.Parse(result.DiscountPercentage.ToString()) > 0)
+                {
+                    orinfo += $"[L]DISCOUNT({result.DiscountPercentage}%)    :P {result.Discount}\n";
+                }
+                else
+                {
+                    orinfo += $"[L]DISCOUNT         :P {result.Discount}\n";
+                }
                 orinfo += $"[L]AMOUNT TENDERED  :P {result.AmountTendered}\n";
                 orinfo += $"[L]CHANGE           :P {result.Change}\n";
                 orinfo += $"[C]================================\n";
@@ -290,7 +297,14 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatLabelWithStringValue("DURATION", result.Duration));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMOUNT DUE", result.TotalAmountDue));
-                    toExport.Add(StringGenerator.FormatLabelWithDoubleValue("DISCOUNT", result.Discount));
+                    if(result.DiscountPercentage > 0)
+                    {
+                        toExport.Add(StringGenerator.FormatLabelWithDoubleValue($"DISCOUNT ({result.DiscountPercentage}%)", result.Discount));
+                    }
+                    else
+                    {
+                        toExport.Add(StringGenerator.FormatLabelWithDoubleValue("DISCOUNT", result.Discount));
+                    }
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMOUNT TENDERED", result.AmountTendered));
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("CHANGE", result.Change));
                     toExport.Add(StringGenerator.AddNewLineSeparator());
@@ -380,7 +394,14 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[L]DURATION : {result.Duration}\n";
             orinfo += $"[C]================================\n";
             orinfo += $"[L]AMOUNT DUE       :P {result.TotalAmountDue}\n";
-            orinfo += $"[L]DISCOUNT         :P {result.Discount}\n";
+            if (decimal.Parse(result.DiscountPercentage.ToString()) > 0)
+            {
+                orinfo += $"[L]DISCOUNT({result.DiscountPercentage}%)    :P {result.Discount}\n";
+            }
+            else
+            {
+                orinfo += $"[L]DISCOUNT         :P {result.Discount}\n";
+            }
             orinfo += $"[L]AMOUNT TENDERED  :P {result.AmountTendered}\n";
             orinfo += $"[L]CHANGE           :P {result.Change}\n";
             orinfo += $"[C]================================\n";

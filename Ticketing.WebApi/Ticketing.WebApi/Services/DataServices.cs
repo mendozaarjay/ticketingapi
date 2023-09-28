@@ -213,6 +213,7 @@ namespace Ticketing.WebApi.Services
                     CustomerAddress = result.Rows[0]["CustomerAddress"].ToString(),
                     CustomerTin = result.Rows[0]["CustomerTin"].ToString(),
                     CustomerId = result.Rows[0]["CustomerId"].ToString(),
+                    DiscountPercentage = decimal.Parse(result.Rows[0]["DiscountPercentage"].ToString())
                 };
                 item = or;
             }
