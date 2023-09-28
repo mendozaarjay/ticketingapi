@@ -1759,8 +1759,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
             bodyString += $"[L]Start Date & Time: [R]{reading.StartDate}\n";
             bodyString += $"[L]End Date & Time: [R]{reading.EndDate}\n";
-            bodyString += $"[L]Beg. SI #: [R]{reading.BeginningSINo}\n";
-            bodyString += $"[L]End. SI # [R]{reading.EndingSINo}\n";
+            bodyString += $"[L]Beg. OR #: [R]{reading.BeginningSINo}\n";
+            bodyString += $"[L]End. OR # [R]{reading.EndingSINo}\n";
             bodyString += $"[L]Beg. Void #: [R]{reading.BeginningVoidNo}\n";
             bodyString += $"[L]End. Void # [R]{reading.EndingVoidNo}\n";
             bodyString += $"[L]Beg. Return #: [R]{reading.BeginningReturnNo}\n";
@@ -1857,8 +1857,8 @@ namespace Ticketing.WebApi.Controllers
             bodyString += $"[L]Report Time: [R]{reading.ReportTime}\n";
             bodyString += $"[L]Start Date & Time: [R]{reading.StartDate}\n";
             bodyString += $"[L]End Date & Time: [R]{reading.EndDate}\n";
-            bodyString += $"[L]Beg. SI #: [R]{reading.BeginningSINo}\n";
-            bodyString += $"[L]End. SI # [R]{reading.EndingSINo}\n";
+            bodyString += $"[L]Beg. OR #: [R]{reading.BeginningSINo}\n";
+            bodyString += $"[L]End. OR # [R]{reading.EndingSINo}\n";
             bodyString += $"[L]Beg. Void #: [R]{reading.BeginningVoidNo}\n";
             bodyString += $"[L]End. Void # [R]{reading.EndingVoidNo}\n";
             bodyString += $"[L]Beg. Return #: [R]{reading.BeginningReturnNo}\n";
