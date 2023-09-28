@@ -428,7 +428,8 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]{result.TIN} :\n";
             orinfo += $"[C]ACCREDITATION NO :\n";
             orinfo += $"[C]{result.AccreditationNo} \n";
-            orinfo += $"[C]DATE ISSUED :{result.AccreditationValidUntil} \n";
+            orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
+            orinfo += $"[C]VALID UNTIL :{result.AccreditationValidUntil} \n";
             orinfo += $"[C]PTU NO :\n";
             orinfo += $"[C]{result.PTUNo} \n";
             orinfo += $"[C]DATE ISSUED :{result.PTUDateIssued} \n\n";
