@@ -251,7 +251,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]{result.TIN} :\n";
                 orinfo += $"[C]ACCREDITATION NO :\n";
                 orinfo += $"[C]{result.AccreditationNo} \n";
-                orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
+                orinfo += $"[C]DATE ISSUED :{result.AccreditationValidUntil} \n";
                 orinfo += $"[C]PTU NO :\n";
                 orinfo += $"[C]{result.PTUNo} \n";
                 orinfo += $"[C]DATE ISSUED :{result.PTUDateIssued} \n\n";
@@ -315,7 +315,7 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatCenterString(result.TIN));
                     toExport.Add(StringGenerator.FormatCenterString("ACCREDITATION NO :"));
                     toExport.Add(StringGenerator.FormatCenterString(result.AccreditationNo));
-                    toExport.Add(StringGenerator.FormatCenterString($"DATE ISSUED :{result.AccreditationDate}"));
+                    toExport.Add(StringGenerator.FormatCenterString($"DATE ISSUED :{result.AccreditationValidUntil}"));
                     toExport.Add(StringGenerator.FormatCenterString($"PTU NO :"));
                     toExport.Add(StringGenerator.FormatCenterString($"{result.PTUNo}"));
                     toExport.Add(StringGenerator.FormatCenterString($"DATE ISSUED :{result.PTUDateIssued}"));
@@ -405,7 +405,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[C]{result.TIN} :\n";
             orinfo += $"[C]ACCREDITATION NO :\n";
             orinfo += $"[C]{result.AccreditationNo} \n";
-            orinfo += $"[C]DATE ISSUED :{result.AccreditationDate} \n";
+            orinfo += $"[C]DATE ISSUED :{result.AccreditationValidUntil} \n";
             orinfo += $"[C]PTU NO :\n";
             orinfo += $"[C]{result.PTUNo} \n";
             orinfo += $"[C]DATE ISSUED :{result.PTUDateIssued} \n\n";
