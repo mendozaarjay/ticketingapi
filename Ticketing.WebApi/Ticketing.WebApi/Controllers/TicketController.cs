@@ -217,7 +217,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[L]AMOUNT DUE       :P {result.TotalAmountDue}\n";
                 if(decimal.Parse(result.DiscountPercentage.ToString()) > 0)
                 {
-                    orinfo += $"[L]DISCOUNT({result.DiscountPercentage}%)    :P {result.Discount}\n";
+                    orinfo += $"[L]DISCOUNT({int.Parse(result.DiscountPercentage.ToString())}%)    :P {result.Discount}\n";
                 }
                 else
                 {
@@ -299,7 +299,7 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatLabelWithDoubleValue("AMOUNT DUE", result.TotalAmountDue));
                     if(result.DiscountPercentage > 0)
                     {
-                        toExport.Add(StringGenerator.FormatLabelWithDoubleValue($"DISCOUNT ({result.DiscountPercentage}%)", result.Discount));
+                        toExport.Add(StringGenerator.FormatLabelWithDoubleValue($"DISCOUNT ({int.Parse(result.DiscountPercentage.ToString())}%)", result.Discount));
                     }
                     else
                     {
@@ -396,7 +396,7 @@ namespace Ticketing.WebApi.Controllers
             orinfo += $"[L]AMOUNT DUE       :P {result.TotalAmountDue}\n";
             if (decimal.Parse(result.DiscountPercentage.ToString()) > 0)
             {
-                orinfo += $"[L]DISCOUNT({result.DiscountPercentage}%)    :P {result.Discount}\n";
+                orinfo += $"[L]DISCOUNT({int.Parse(result.DiscountPercentage.ToString())}%)    :P {result.Discount}\n";
             }
             else
             {
