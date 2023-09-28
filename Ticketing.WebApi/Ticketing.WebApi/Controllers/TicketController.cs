@@ -221,7 +221,15 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]================================\n";
                 orinfo += $"[L]VATABLE SALES    :P {result.VatableSales}\n";
                 orinfo += $"[L]VAT AMOUNT(12%)  :P {result.Vat}\n";
-                orinfo += $"[L]VAT-EXEMPT SALES :P {result.VatExempt}\n";
+                if (decimal.Parse(result.Discount) > 0)
+                {
+                    orinfo += $"[L]<b>VAT-EXEMPT SALES :P {result.VatExempt}</b>\n";
+                }
+                else
+                {
+                    orinfo += $"[L]VAT-EXEMPT SALES :P {result.VatExempt}\n";
+                }
+
                 orinfo += $"[L]ZERO RATED SALES :P {result.ZeroRated}\n";
 
                 //orinfo += $"[L]SUBTOTAL      :P {result.Subtotal}\n";
