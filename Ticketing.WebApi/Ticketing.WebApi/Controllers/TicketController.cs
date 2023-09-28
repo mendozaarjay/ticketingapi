@@ -202,7 +202,7 @@ namespace Ticketing.WebApi.Controllers
                 orinfo += $"[C]<b>{result.RateName}</b>\n\n";
                 if(decimal.Parse(result.Discount) > 0)
                 {
-                    orinfo += $"[C]<b>DISCOUNT : {result.DiscountName}</b>\n\n";
+                    orinfo += $"[C]<b>{result.DiscountName}</b>\n\n";
                 }
                 orinfo += $"[L]OR NO    : {result.OrNumber}\n";
                 orinfo += $"[L]TICKET NO: {result.TicketNo}\n";
@@ -284,7 +284,7 @@ namespace Ticketing.WebApi.Controllers
                     toExport.Add(StringGenerator.FormatCenterString(result.RateName));
                     if (decimal.Parse(result.Discount) > 0)
                     {
-                        toExport.Add(StringGenerator.FormatCenterString("DISCOUNT : " + result.DiscountName));
+                        toExport.Add(StringGenerator.FormatCenterString(result.DiscountName));
                     }
                     toExport.Add(StringGenerator.FormatLabelWithStringValue("OR NO", result.OrNumber));
                     toExport.Add(StringGenerator.FormatLabelWithStringValue("TICKET NO", result.TicketNo));
@@ -381,7 +381,7 @@ namespace Ticketing.WebApi.Controllers
             }
             if (decimal.Parse(result.Discount) > 0)
             {
-                orinfo += $"[C]<b>DISCOUNT : {result.DiscountName}</b>\n\n";
+                orinfo += $"[C]<b>{result.DiscountName}</b>\n\n";
             }
             orinfo += $"[L]OR NO    : {result.OrNumber}\n";
             orinfo += $"[L]TICKET NO: {result.TicketNo}\n";
